@@ -60,7 +60,7 @@ veto in `design-judge`, not by good intentions.
 ## Quickstart
 
 ```bash
-git clone <this-repo> && cd fleetcraft
+git clone https://github.com/shubhamsingh-cell/fleetcraft.git && cd fleetcraft
 
 # Skills → user-level skill directory
 cp -r skills/* ~/.claude/skills/
