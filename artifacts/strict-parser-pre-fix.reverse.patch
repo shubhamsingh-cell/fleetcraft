@@ -1,0 +1,194 @@
+--- a/plugins/fleetcraft/hooks/fleet-delegation-guard.py
++++ b/plugins/fleetcraft/hooks/fleet-delegation-guard.py
+@@ -10,7 +10,6 @@
+ from __future__ import annotations
+ 
+ import os
+-import re
+ from typing import Iterable
+ 
+ from fleet_hook_utils import command_from_payload, command_segments, command_substitutions, executable_tokens, hook_output, lexer_failed, read_json, unsupported_shell_construct
+@@ -20,8 +19,6 @@
+ STRICT = "strict"
+ INVALID = "invalid"
+ MAX_NESTED_SHELL_DEPTH = 64
+-LONG_RUN = re.compile(r"\bpytest\b|\b(npm|pnpm|yarn)\s+(run\s+)?(build|test|e2e)\b|\balembic\s+upgrade|\bmake\s+(build|test|deploy)\b|\bdocker\s+(build|compose\s+up)")
+-INSTALL = re.compile(r"\b(?:npm|pnpm|yarn)\s+(?:add|install)\s+(?!-)(?:-[-\w]+\s+)*[a-z@]|\bpip3?\s+install\s+(?!-)(?:--[-\w]+\s+)*[a-zA-Z]")
+ 
+ 
+ def configured_mode() -> str:
+@@ -86,7 +83,7 @@
+             "--trailer", "--pathspec-from-file",
+         },
+         "push": {
+-            "-o", "--push-option", "--receive-pack",
++            "-o", "-u", "--push-option", "--set-upstream", "--receive-pack",
+             "--exec", "--repo",
+         },
+     }
+@@ -103,7 +100,7 @@
+         # cannot be an exact help/dry-run flag themselves.
+         if (
+             (action == "commit" and argument.startswith(("-m", "-F", "-C", "-c")) and len(argument) > 2)
+-            or (action == "push" and argument.startswith("-o") and len(argument) > 2)
++            or (action == "push" and argument.startswith(("-o", "-u")) and len(argument) > 2)
+             or any(argument.startswith(option + "=") for option in value_options[action] if option.startswith("--"))
+         ):
+             index += 1
+@@ -210,7 +207,7 @@
+ 
+ 
+ def is_subagent(payload: dict) -> bool:
+-    return bool(payload.get("agent_id") or payload.get("agent_type") or "/subagents/" in str(payload.get("transcript_path", "")))
++    return bool(payload.get("agent_id") or payload.get("agent_type"))
+ 
+ 
+ def malformed_command_payload(payload: dict) -> bool:
+@@ -218,9 +215,9 @@
+     if not payload:
+         return False
+     tool_input = payload.get("tool_input")
+-    if "tool_input" in payload and tool_input and not isinstance(tool_input, dict):
++    if "tool_input" in payload and not isinstance(tool_input, dict):
+         return True
+-    if isinstance(tool_input, dict) and tool_input.get("command") and not isinstance(tool_input["command"], str):
++    if isinstance(tool_input, dict) and "command" in tool_input and not isinstance(tool_input["command"], str):
+         return True
+     return "command" in payload and not isinstance(payload["command"], str)
+ 
+@@ -228,7 +225,7 @@
+ def context_for(actions: Iterable[str], mode: str, subagent: bool) -> str:
+     listed = ", ".join(sorted(actions))
+     base = (
+-        f"Fleetcraft {mode} delegation guard matched deploy/publish-shaped action: {listed}. "
++        f"Fleetcraft {mode} delegation guard matched: {listed}. "
+         "This hook classified the command before execution. "
+     )
+     if mode == STRICT:
+@@ -239,13 +236,12 @@
+     if subagent:
+         return base + (
+             "Audit mode does not block the current call. You are already a delegated agent: "
+-            "record the observed preflight and terminal result; do not claim deploy success from a push. "
+-            "The gitleaks skill offers a redacted local secret preflight."
++            "record the observed preflight and terminal result; do not claim deploy success from a push."
+         )
+     return base + (
+-            "Audit mode does not block the current call. You are the MAIN-LOOP ORCHESTRATOR. Before the next irreversible step, "
++        "Audit mode does not block the current call. Before the next irreversible step, "
+         "check whether bounded execution should be delegated, verify the exact target and approval, "
+-        "and run a redacted secret preflight when source/config changed; the gitleaks skill offers a redacted local secret preflight."
++        "and run a redacted secret preflight when source/config changed."
+     )
+ 
+ 
+@@ -261,22 +257,14 @@
+         else:
+             hook_output(
+                 "PreToolUse",
+-                "fleet-orchestrator guard could not parse this tool call's payload; shape detection did NOT run. treat this as an unchecked call, not a cleared one; Audit mode does not block the current call.",
++                "Fleetcraft audit delegation guard could not parse this command payload. Audit mode does not block the current call; inspect the exact command and approval before an irreversible step.",
+             )
+         return
+-    if malformed_command_payload(payload):
+-        if mode != STRICT:
+-            hook_output("PreToolUse", "fleet-orchestrator guard: shape detection did NOT run because the command payload was malformed; treat this as an unchecked call, not a cleared one; audit mode does not block this unchecked call.")
+-            return
++    if mode == STRICT and malformed_command_payload(payload):
+         hook_output("PreToolUse", "Fleetcraft strict delegation guard received a malformed command payload; confirmation is required until it can be inspected.", permissionDecision="ask", permissionDecisionReason="Malformed command payload cannot be safely classified in strict mode.")
+         return
+-    command = command_from_payload(payload)
+-    actions = classify_command(command)
++    actions = classify_command(command_from_payload(payload))
+     if not actions:
+-        if LONG_RUN.search(command):
+-            hook_output("PreToolUse", "fleet-orchestrator guard: this is a LONG-LIVED RUN. The orchestrator owns its tracked execution; a subagent must finish foreground work before returning.")
+-        elif INSTALL.search(command):
+-            hook_output("PreToolUse", "fleet-orchestrator guard: this INSTALLS a third-party package. Check provenance, side effects, rollback, and isolated installation first.")
+         return
+     context = context_for(actions, mode, is_subagent(payload))
+     if mode == STRICT:
+@@ -292,3 +280,4 @@
+ 
+ if __name__ == "__main__":
+     main()
++
+--- a/plugins/fleetcraft/hooks/autoload-judgment.py
++++ b/plugins/fleetcraft/hooks/autoload-judgment.py
+@@ -1,18 +1,62 @@
+ #!/usr/bin/env python3
+-import json, os
++"""SessionStart hook that injects Fleetcraft's bundled compact judgment kernel."""
++
++from __future__ import annotations
++
++import os
+ from pathlib import Path
+ 
+-def main():
+-    raw = os.environ.get("CLAUDE_PLUGIN_OPTION_AUTOLOAD_JUDGMENT", "true").lower()
+-    if raw in {"0", "false", "no", "off"}: return
+-    warning = "Fleetcraft autoload_judgment is invalid; using enabled default." if raw not in {"", "1", "true", "yes", "on"} else None
+-    try: text = Path(__file__).with_name("judgment-kernel.md").read_text(encoding="utf-8-sig").replace("\r\n", "\n").strip()
+-    except OSError: text = ""
+-    context = "Fleetcraft judgment kernel:\n\n" + text
+-    if not text or len(context) > 9000:
+-        print(json.dumps({"systemMessage": "Fleetcraft judgment kernel is missing or too large; kernel not loaded."}))
++from fleet_hook_utils import hook_output, read_json, system_message
++
++
++KERNEL = Path(__file__).with_name("judgment-kernel.md")
++# Claude Code caps hook output strings at 10,000 characters. Leave room for
++# the prefix and JSON escaping; never rely on truncation-to-a-file behavior.
++MAX_CONTEXT_CHARS = 9_000
++
++
++def autoload_enabled() -> tuple[bool, bool]:
++    """Return (enabled, invalid-option); invalid values retain the safe default."""
++    raw = os.environ.get("CLAUDE_PLUGIN_OPTION_AUTOLOAD_JUDGMENT", "true").strip().lower()
++    if raw in {"", "1", "true", "yes", "on"}:
++        return True, raw not in {"", "1", "true", "yes", "on"}
++    if raw in {"0", "false", "no", "off"}:
++        return False, False
++    return True, True
++
++
++def kernel_context(kernel: Path) -> str:
++    # utf-8-sig strips an accidental BOM; text-mode reads normalize CRLF so
++    # the exact hook-output budget is evaluated on the emitted characters.
++    text = kernel.read_text(encoding="utf-8-sig").strip()
++    context = "Fleetcraft judgment kernel (SessionStart runtime):\n\n" + text
++    if len(context) > MAX_CONTEXT_CHARS:
++        raise ValueError("bundled judgment kernel exceeds the safe hook-context budget")
++    return context
++
++
++def emit_kernel(kernel: Path = KERNEL, warning: str | None = None) -> None:
++    try:
++        hook_output("SessionStart", kernel_context(kernel), system_message_text=warning)
++    except (OSError, UnicodeError, ValueError) as exc:
++        # A corrupt package must not prevent a session from starting, but it
++        # must be visible: otherwise users may assume the kernel was loaded.
++        system_message(f"Fleetcraft did not load its judgment kernel ({type(exc).__name__}). Run the Fleetcraft doctor before relying on hook guidance.")
++
++
++def main() -> None:
++    # Consume stdin so direct invocation matches hook invocation. SessionStart
++    # payload fields are deliberately not required for this deterministic hook.
++    read_json()
++    enabled, invalid = autoload_enabled()
++    if not enabled:
+         return
+-    output = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context}}
+-    if warning: output["systemMessage"] = warning
+-    print(json.dumps(output))
+-if __name__ == "__main__": main()
++    warning = None
++    if invalid:
++        warning = "Fleetcraft autoload_judgment is invalid; using the safe default (enabled). Set it to true or false."
++    emit_kernel(warning=warning)
++
++
++if __name__ == "__main__":
++    main()
++

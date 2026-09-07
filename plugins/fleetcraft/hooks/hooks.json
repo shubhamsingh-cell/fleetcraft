@@ -1,0 +1,118 @@
+{
+  "description": "Fleetcraft optional reminders.",
+  "hooks": {
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/evidence-batch.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/agent-telemetry.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ],
+        "matcher": "Agent"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/fleet-delegation-guard.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash|PowerShell"
+      },
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/tool-routing-guard.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ],
+        "matcher": "WebFetch|WebSearch"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/autoload-judgment.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/retrieval-honesty-guard.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/completion-gate.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/skill-routing-guard.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  }
+}

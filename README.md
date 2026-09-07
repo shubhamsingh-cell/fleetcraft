@@ -1,173 +1,96 @@
-# fleetcraft
+# Fleetcraft
 
-[![CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhamsingh-cell/fleetcraft/actions/workflows/ci.yml)
+**Evidence-first workflows for AI coding agents.** Fleetcraft brings together focused
+skills, executor/researcher/verifier/strategist roles, optional runtime guards, and
+repeatable checks for the work an agent is about to call complete.
 
-**Judgment infrastructure for AI coding agents** — model tiering, adversarial
-verification gates, and design QA, packaged as installable Claude Code skills,
-agent definitions, and hooks.
+**0.3.0 integration candidate.** This combines the v0.2 source workflows with the earlier
+plugin-hardening work. A source commit, a passing test suite, and a released plugin are
+different milestones. See [EVIDENCE.md](EVIDENCE.md) for observed checks and limitations.
 
-Most agent tooling helps agents *write more code*. This kit is about the other
-problem: getting agent output you can actually trust — which model tier gets
-which subtask, how delegated work gets verified before it's called "done,"
-how a design regression gets caught before it ships, and how a hard-won fix
-becomes a durable lesson instead of a repeat incident.
+## Start with a local evaluation
 
-Everything here was extracted from a working production setup — multiple live
-products, real deploys, real incidents — then sanitized for publication. The
-war stories inside are anonymized but real: every rule in these files exists
-because its absence once caused a specific, dated failure.
-
-## Install
-
-Look before you leap — the hooks are Python that will run inside your agent's
-tool-call path:
+Python 3.9+ and the Claude Code CLI are needed for the package checks. The core skills
+can also be read as plain Markdown. Inspect [SECURITY.md](SECURITY.md) before enabling hooks.
 
 ```bash
-git clone https://github.com/shubhamsingh-cell/fleetcraft.git && cd fleetcraft
-./scripts/install.sh --dry-run
+git clone https://github.com/shubhamsingh-cell/fleetcraft.git
+cd fleetcraft
+python3 scripts/build_plugin.py
+python3 scripts/check_plugin_parity.py
+python3 -m unittest discover -v
+claude --plugin-dir plugins/fleetcraft
 ```
 
-Dry run prints exactly what it would write and changes nothing. When it looks
-right:
+Run `/fleetcraft:doctor` in that session. A local `--plugin-dir` session is the candidate
+evaluation path. Do not invent a release tag or assume the newest source commit is a
+validated published release.
 
-```bash
-./scripts/install.sh
-```
+The legacy installer remains available for existing source-layout users:
+`bash scripts/install.sh --dry-run`. It must preserve existing configuration and report
+its destinations. Avoid loading the manual and plugin copies together: duplicate skills
+and hooks make behavior harder to interpret.
 
-Skills go to `~/.claude/skills/`, agents to `~/.claude/agents/`, hooks to
-`~/.claude/hooks/`. Anything that already exists and differs is backed up to
-`<path>.bak.<timestamp>` rather than overwritten. `--skills-only`,
-`--agents-only`, and `--hooks-only` narrow the install.
+## Choose the workflow that fits
 
-The installer deliberately does **not** edit `~/.claude/settings.json` — a bad
-merge into a live config breaks your session, so wiring the hooks stays your
-call. It prints the JSON to paste; `examples/settings.json` has the complete
-five-hook block, and `hooks/README.md` documents each event, matcher, and
-kill-switch.
-
-Paths referenced *inside* skills and hooks assume the standard `~/.claude/...`
-layout; adjust if yours differs.
-
-## What's in here
-
-### Skills
-
-| Path | Purpose |
+| Need | Skill |
 |---|---|
-| `skills/fleet-orchestrator/` | The core: capability-matched model tiering for multi-agent work (which brain runs what, and why the session model is a floor, not a ceiling), prompt compression for subagent briefs, and an 8-class adversarial final-pass gate to run before calling anything "done." |
-| `skills/design-judge/` | Screenshot-first design review: render the real surface, run a multi-lens judge panel, apply hard vetoes (fabricated testimonials/stats/logos, design regressions), then verdict. Ships a 73-item AI-slop checklist and a harvested anti-cliché catalog. |
-| `skills/debugging-and-error-recovery/` | Root-cause debugging: stop cleanly, localize the failure to its actual cause instead of patching symptoms, and handle bugs that refuse to reproduce. |
-| `skills/performance-diagnosis/` | Fix slow software by measurement, not guesswork — baselines before changes, N+1 and pool-exhaustion patterns, cache design, Core Web Vitals regressions. |
-| `skills/change-plan/` | Decision-ready change plans: blast radius, staged rollout with acceptance *and* abort criteria, rollback or forward recovery, required approvals. |
-| `skills/project-handoff/` | Durable state for work that outlives a session — written for a reader with no memory of the conversation, so the next session resumes instead of re-deriving. |
-| `skills/incident-miner/` | Turns a resolved incident or painful bug hunt into a durable lessons-log entry or a new skill — read-only evidence gathering, hard stop for human approval before anything is written. |
-| `skills/growth-web-architect/` | Architect/audit marketing landing pages: conversion mechanism first, proof-integrity vetoes, responsive matrix, reduced-motion and keyboard states, accessibility pass. |
-| `skills/product-interface-craft/` | Build product UI (dashboards, onboarding, settings, tables) with a deliberate design direction, complete interaction states, and rendered desktop/mobile validation. |
+| Plan a consequential change, with acceptance and recovery | `change-plan` |
+| Coordinate implementation and independent review | `fleet-orchestrator` |
+| Diagnose a reproducible failure | `debugging-and-error-recovery` |
+| Improve measured performance without sacrificing correctness | `performance-diagnosis` |
+| Build or refine an application interface | `product-interface-craft` |
+| Build or refine an acquisition journey | `growth-web-architect` |
+| Implement a supplied visual reference | `image-to-code` |
+| Judge an actual rendered result | `design-judge` |
+| Preserve decisions, evidence and open gates for continuation | `project-handoff` |
+| Propose a durable lesson from a resolved incident | `incident-miner` |
+| Check the installed package | `doctor` |
 
-### Agent definitions
+Plugin commands use the `fleetcraft:` namespace. The four agent roles separate execution,
+source gathering, independent acceptance, and escalated strategy judgment. Model aliases
+come from the adopter's environment; a model's prose identity is not runtime evidence.
 
-| Path | Purpose |
-|---|---|
-| `agents/executor.md` | Heavy-execution contract: root-cause-gated bug fixes, regression tests proven failing on pre-fix code, shared-tree push safety, two-verdict self-check. |
-| `agents/verifier.md` | Adversarial verification: reviews delegated work by trying to *refute* it. Write tools removed via `disallowedTools` frontmatter — defence in depth, not a substitute for giving a panel its own worktree. |
-| `agents/researcher.md` | Research contract: verified-vs-plausible tagging on every finding, sources required, dead ends declared instead of papered over, and a retrieval ladder that puts docs tooling ahead of a generic web fetch. |
-| `agents/strategist.md` | The upward-escalation tier, for taste/brand/voice/strategy calls that sit *above* the session model. Deliberately narrow: it hands the call back if the main loop already outranks it. |
+## What makes the checks useful
 
-### Hooks
+- A task has an explicit scope, owner, base revision and acceptance evidence.
+- A regression test must fail against the broken behavior before its passing result counts.
+- Specification compliance and build quality receive separate verdicts.
+- A failed, missing or timed-out check stays OPEN; it cannot silently become PASS.
+- Visual proof requires an actual render. Testimonials, statistics and logos need real sources.
+- Existing authorization is carried forward; a new tool or skill does not expand it.
+- Provider integrations are detected before use. Fleetcraft does not install service clients
+  or configure credentials merely because a workflow mentions them.
 
-Prose can't self-enforce. Four of these inject context at the decision moment;
-one deliberately blocks. All fail open — a crashing guard must never wedge a
-session.
+These are protocol rules. Only the documented runtime decision or CI check is technical
+enforcement; instructions alone do not guarantee model compliance.
 
-| Path | Event | Behaviour |
-|---|---|---|
-| `hooks/autoload-judgment.py` | `SessionStart` | Injects a judgment skill into every session's context, so discipline doesn't depend on the model remembering to load it. |
-| `hooks/fleet-delegation-guard.py` | `PreToolUse` (Bash) | Catches deploy/commit/long-run/package-install shapes in the main loop and injects the delegation rule at the moment it's about to be broken. |
-| `hooks/skill-routing-guard.py` | `UserPromptSubmit` | Routes document/share/design/docs-shaped prompts to the matching installed skill instead of an ad hoc answer. |
-| `hooks/tool-routing-guard.py` | `PreToolUse` (WebFetch\|WebSearch) | **The one blocker.** Denies a documentation-URL fetch *once*, pointing at a docs MCP first; the retry passes. Kill-switch downgrades it to a reminder. |
-| `hooks/retrieval-honesty-guard.py` | `Stop` | Blocks a turn that claims "past my cutoff / I can't verify" when no retrieval actually ran in it. The tell is the sentence, not the topic. |
+## One source tree, one generated plugin
 
-## The ideas, in one paragraph each
+Author `skills/`, `agents/`, `hooks/` and their source support files. The sparse
+`plugins/fleetcraft/` distribution is generated by `scripts/build_plugin.py`; do not edit it
+independently. `scripts/check_plugin_parity.py` must reject stale generated content.
+This preserves a reviewable source layout while making the plugin self-contained.
 
-**Tiering is capability-matched, not cost-first.** One expensive model plans,
-routes, and synthesizes; cheaper models execute; escalation goes *up* as well
-as down. The session model the owner picked is a stakes signal — never
-silently delegate judgment-bearing work below it. And never trust a
-subagent's self-reported model id: it's a hint, not a measurement. To learn
-what a `model:` alias really resolves to, read the model name quoted in an API
-*error* — success responses don't name it and the agent itself doesn't know.
+The [reconciliation record](docs/RECONCILIATION.md) explains what was preserved from each
+parent; the [lesson map](docs/SESSION_LESSON_MAP.md) makes the integration scope explicit. [Compatibility](COMPATIBILITY.md) describes tested environments and optional features.
 
-**The builder reads its own diff generously.** So "done" passes through an
-adversarial gate: shared-state races, silently-failing deploy gates, design
-regressions via helpful defaults, irreversible ops dressed as routine
-cleanup, claimed-done vs. verified-done, the "I'm already holding the
-context" rationalization, fabricated proof, and — the master rule — for every
-claim, name the observation that would look *different if the claim were
-false*, and confirm you actually made that observation.
+## Evaluate behavior, not just syntax
 
-**Prose can't self-enforce.** Skills are advice; the moment of failure is
-mid-flow, under context pressure, exactly when advice gets skipped. The hooks
-are small deterministic scripts that re-inject the rule at the decision
-moment.
+The [evaluation harness](evals/README.md) separates corpus validation, observed skill
+selection, and behavioral expectations. Live runs are explicit and bounded. Comparisons
+must retain the actual model, fixture, tool trace and baseline identity. A lexical match,
+a skill mentioning itself, or an empty trace is not selection evidence.
 
-**Not knowing is a conclusion, not an opening move.** "I can't verify that"
-is only honest *after* retrieval was attempted and reported. Asserting it
-while holding working search tools is the specific failure
-`retrieval-honesty-guard` exists to catch — and it catches it on the sentence,
-because the topic is never the tell.
+We make no unsupported claim about superiority, token savings, general routing reliability,
+or output-quality uplift. Results describe the cases and environment actually measured.
 
-**Proof is sacred.** Any user-facing surface with testimonials, counters,
-logos, or case studies either traces every element to a real artifact or
-labels it illustrative — or it doesn't ship. This rule is enforced by a hard
-veto in `design-judge`, not by good intentions.
+## Contribute and report issues
 
-## How this repo is verified
+Use [CONTRIBUTING.md](CONTRIBUTING.md) for the evidence and validation bar and
+[SECURITY.md](SECURITY.md) for reporting guidance. See [CHANGELOG.md](CHANGELOG.md) for changes.
 
-A repo whose entire thesis is "verify before you claim" would be absurd
-without its own gate, so:
-
-- `scripts/validate.py` — stdlib-only. Checks every skill and agent's
-  frontmatter, compiles every hook, feeds each one an empty payload to prove
-  it exits cleanly, and fails the build on absolute local paths. Run it before
-  opening a PR.
-- `tests/` — behavioural tests driving each hook as a subprocess over real
-  stdin payloads. **Every assertion ships with a negative control**: each
-  "stays silent" test is paired with a "actually fires" test on a triggering
-  payload, so a hook gutted to return nothing fails the suite instead of
-  passing it quietly. That pairing is the same vacuous-test rule the skills
-  apply to everything else, turned on the tests themselves.
-- `.github/workflows/ci.yml` — runs both on every push and pull request.
-
-## Honest limitations
-
-- These are opinionated operating rules, not a framework — the only code is
-  the hooks and the test/validation harness around them. Value scales with how
-  much multi-agent delegation you actually do.
-- Skill/hook wiring targets Claude Code. The *ideas* (tiering floor,
-  adversarial gates, proof vetoes, retrieval honesty) port to any agent
-  harness; the packaging doesn't yet.
-- No benchmarks are claimed. The evidence base is one production setup's
-  documented incidents, which is exactly one data point more than vibes.
-- Several skill descriptions exceed the ~500-character budget the validator
-  warns about. Claude Code's skill catalog has a finite description budget and
-  skills past it can render without descriptions; if you install many skills,
-  that's the knob to watch.
-
-## Contributing
-
-The bar here is a real precedent, not a good idea — see `CONTRIBUTING.md`.
-Security posture and how to report a vulnerability: `SECURITY.md`.
-
-## Attribution
-
-`design-judge` and `growth-web-architect` include harvested, credited
-material from [taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) and
-pattern references from
-[web-designer-plugin](https://github.com/MickeyAlton33/web-designer-plugin)
-(MIT). The AI-slop checklist is distilled from
-[anti-slop](https://github.com/miqdadbadjuber/anti-slop) (MIT). Attribution
-and fetch dates are marked inline in the affected sections.
-
-## License
-
-MIT — see `LICENSE`. Copyright (c) 2026 Shubham Singh Chandel.
+Original Fleetcraft contributions are [MIT](LICENSE). Adapted material retains its
+applicable terms; the combined distribution includes MIT and Apache-2.0 material.
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) records attribution and full notices;
+[the source ledger](docs/SOURCE_LEDGER.json) pins this integration's external references.

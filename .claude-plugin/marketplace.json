@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "description": "Evidence-first skills, agents, and optional safety reminders.",
+    "version": "0.3.0"
+  },
+  "name": "fleetcraft",
+  "owner": {
+    "name": "Shubham Singh Chandel"
+  },
+  "plugins": [
+    {
+      "name": "fleetcraft",
+      "source": "./plugins/fleetcraft",
+      "strict": true
+    }
+  ]
+}

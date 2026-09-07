@@ -1,0 +1,42 @@
+{
+  "scope": "September integration references; earlier derived design/incident/planning sources and full notices remain in THIRD_PARTY_NOTICES.md",
+  "references": [
+    {
+      "repository": "addyosmani/agent-skills",
+      "revision": "48cb1168aeaaa70dfc2bbf709eddfa2a8ed8129a",
+      "license": "MIT",
+      "license_url": "https://github.com/addyosmani/agent-skills/blob/48cb1168aeaaa70dfc2bbf709eddfa2a8ed8129a/LICENSE",
+      "affected_paths": [
+        "skills/debugging-and-error-recovery/SKILL.md",
+        "skills/performance-diagnosis/SKILL.md",
+        "skills/fleet-orchestrator/SKILL.md",
+        "evals/"
+      ],
+      "use": "Independent context-management and three-tier-evaluation synthesis. The existing debugging/performance source attributes earlier revision469d00f4e67ff4a21eb6e6e467a086c9a1f1deb8. No upstream runtime code is copied.",
+      "verified_date": "2026-09-08"
+    },
+    {
+      "repository": "obra/superpowers",
+      "revision": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "license": "MIT",
+      "license_url": "https://github.com/obra/superpowers/blob/b36e0829c6d0140e93cfef2ca599b1b07d4a7797/LICENSE",
+      "affected_paths": [
+        "skills/fleet-orchestrator/SKILL.md",
+        "docs/RECONCILIATION.md"
+      ],
+      "use": "Reference for small task artifacts, isolated execution and separate review verdicts. Fleetcraft already had these protocols; any new expression is independently authored, not a vendored workflow.",
+      "verified_date": "2026-09-08"
+    },
+    {
+      "repository": "anthropics/skills",
+      "revision": "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/anthropics/skills/blob/41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f/skills/skill-creator/LICENSE.txt",
+      "affected_paths": [
+        "evals/"
+      ],
+      "use": "Reference for paired skill/baseline evaluations and expectation evidence. Independent runner and fixtures; no upstream template, scripts or document-skill bundles copied.",
+      "verified_date": "2026-09-08"
+    }
+  ]
+}

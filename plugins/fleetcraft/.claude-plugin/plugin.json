@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "author": {
+    "name": "Shubham Singh Chandel"
+  },
+  "description": "Evidence-first skills, agents, and optional safety reminders.",
+  "displayName": "Fleetcraft",
+  "license": "MIT AND Apache-2.0",
+  "name": "fleetcraft",
+  "userConfig": {
+    "autoload_judgment": {
+      "default": true,
+      "description": "Load the bundled compact judgment kernel.",
+      "title": "Autoload judgment kernel",
+      "type": "boolean"
+    },
+    "completion_gate": {
+      "default": false,
+      "description": "Require evidence fields for explicitly verified tasks.",
+      "title": "Completion evidence gate",
+      "type": "boolean"
+    },
+    "delegation_mode": {
+      "default": "audit",
+      "description": "Use audit reminders or explicit strict-mode confirmation for guarded commands.",
+      "title": "Delegation guard mode",
+      "type": "string"
+    },
+    "evidence_batch": {
+      "default": false,
+      "description": "Summarize observed completed tool batches without treating them as proof.",
+      "title": "Batch evidence reminders",
+      "type": "boolean"
+    },
+    "routing_enforce": {
+      "default": false,
+      "description": "Opt in to bounded documentation-routing enforcement.",
+      "title": "Routing enforcement",
+      "type": "boolean"
+    }
+  },
+  "version": "0.3.0"
+}

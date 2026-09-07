@@ -89,6 +89,18 @@ done
 log() { printf '%s\n' "$*"; }
 log_dry() { printf '  [dry-run] %s\n' "$*"; }
 
+# Print a JSON string whose value is a shell-safe hook command. Claude Code's
+# manual hook setting is a command string, so both the embedded path and the
+# JSON representation must be quoted independently.
+json_hook_command() {
+  python3 - "$1" <<'PY'
+import json
+import shlex
+import sys
+print(json.dumps("python3 -B " + shlex.quote(sys.argv[1])))
+PY
+}
+
 # install_file SRC DEST — copy a single file into place, backing up an
 # existing, differing DEST first. Never overwrites an identical DEST.
 install_file() {
@@ -253,7 +265,7 @@ log ""
 # stays correct as hooks are added, renamed, or re-targeted.
 # ---------------------------------------------------------------------------
 if [ "$DO_HOOKS" -eq 1 ] && [ "${#HOOK_FILES[@]}" -gt 0 ]; then
-  KNOWN_EVENTS='SessionStart PreToolUse PostToolUse UserPromptSubmit SubagentStart SubagentStop PreCompact Notification Stop'
+  KNOWN_EVENTS='SessionStart PreToolUse PostToolUse PostToolBatch TaskCompleted UserPromptSubmit SubagentStart SubagentStop PreCompact Notification Stop'
 
   detect_event_and_matcher() {
     # Sets HOOK_EVENT / HOOK_MATCHER (HOOK_MATCHER may be empty) from a
@@ -276,6 +288,15 @@ if [ "$DO_HOOKS" -eq 1 ] && [ "${#HOOK_FILES[@]}" -gt 0 ]; then
     f="$1"
     HOOK_EVENT=""
     HOOK_MATCHER=""
+
+    # Hooks that delegate JSON formatting to fleet_hook_utils do not carry
+    # hookEventName literally. Keep this small registry explicit so the
+    # printed manual configuration remains complete as well as quoted.
+    case "$(basename -- "$f")" in
+      evidence-batch.py) HOOK_EVENT="PostToolBatch"; return ;;
+      agent-telemetry.py) HOOK_EVENT="PostToolUse"; HOOK_MATCHER="Agent"; return ;;
+      completion-gate.py) HOOK_EVENT="TaskCompleted"; return ;;
+    esac
 
     paren="$(grep -m1 -oE '\((SessionStart|PreToolUse|PostToolUse|UserPromptSubmit|SubagentStart|SubagentStop|PreCompact|Notification|Stop)[^)]*\)' -- "$f" 2>/dev/null || true)"
     if [ -n "$paren" ]; then
@@ -340,12 +361,13 @@ if [ "$DO_HOOKS" -eq 1 ] && [ "${#HOOK_FILES[@]}" -gt 0 ]; then
       fi
       first=0
       matcher_display="$HOOK_MATCHER"
+      command_json="$(json_hook_command "$HOOKS_DEST/$name")"
       echo "  {"
       echo "    \"matcher\": \"$matcher_display\","
       echo "    \"hooks\": ["
       echo "      {"
       echo "        \"type\": \"command\","
-      echo "        \"command\": \"python3 $HOOKS_DEST/$name\","
+      echo "        \"command\": $command_json,"
       echo "        \"timeout\": 10"
       echo "      }"
       echo "    ]"
