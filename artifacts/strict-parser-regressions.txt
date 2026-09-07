@@ -1,0 +1,115 @@
+Fleetcraft strict parser reproducibility evidence
+format: deterministic; no capture timestamp is recorded
+repository: <REPO>
+interpreter: <PYTHON> (3.9.6)
+platform: macOS-26.6.2-arm64-arm-64bit
+test_command: <PYTHON> -m unittest tests.test_strict_parser_regressions -v
+
+## SHA-256 inputs
+db169bf62d7a373e9e51a638136396a2bd5010aded46079118ae99fc64b5414d  artifacts/strict-parser-pre-fix-source/fleet_hook_utils.py
+d503d581718dd053954f0d0808f5edc30ce0465dd163d4e1ffabd505ef1984fa  artifacts/strict-parser-pre-fix-source/fleet-delegation-guard.py
+7d235d9ac36e784f027871d50ca8d76aed3fbfb957fe4e045f5344333b433f65  artifacts/strict-parser-pre-fix-source/autoload-judgment.py
+5c132fe84ba466bb6d86e90137514a466a47cbee3156c349db156a9ecb1ab462  artifacts/strict-parser-pre-fix-source/completion-gate.py
+db169bf62d7a373e9e51a638136396a2bd5010aded46079118ae99fc64b5414d  plugins/fleetcraft/hooks/fleet_hook_utils.py
+00f7a186bbd423d1ba4681f695073545a2d018b390996da0c12e883c99a29a5a  plugins/fleetcraft/hooks/fleet-delegation-guard.py
+6fc3364dbdaf8c0683e0beffd48ebf52bbd5c474b26fa8f5171f3839bf933f96  plugins/fleetcraft/hooks/autoload-judgment.py
+5c132fe84ba466bb6d86e90137514a466a47cbee3156c349db156a9ecb1ab462  plugins/fleetcraft/hooks/completion-gate.py
+5d30146ff33d96d11ded6200e5b6827317636cb21390a7b4771f401480fc2b8d  tests/test_strict_parser_regressions.py
+219ec4dee76a1bf92b0302d4c891213a36d04ab6d1ae82e38c75eb92999e0d4f  artifacts/strict-parser-pre-fix.reverse.patch
+
+## reconstruction byte comparisons
+plugins/fleetcraft/hooks/fleet_hook_utils.py: MATCH
+plugins/fleetcraft/hooks/fleet-delegation-guard.py: MATCH
+plugins/fleetcraft/hooks/autoload-judgment.py: MATCH
+plugins/fleetcraft/hooks/completion-gate.py: MATCH
+targeted_test_unchanged: MATCH
+
+## expected pre-fix assertion failures
+test_git_push_set_upstream_flags_preserve_genuine_dry_runs
+
+## git apply --check candidate-to-pre-fix patch
+exit: 0
+stdout:
+<empty>
+stderr:
+<empty>
+
+## git apply candidate-to-pre-fix patch
+exit: 0
+stdout:
+<empty>
+stderr:
+<TEMP>/reconstructed/strict-parser-pre-fix.reverse.patch:115: new blank line at EOF.
++
+<TEMP>/reconstructed/strict-parser-pre-fix.reverse.patch:194: new blank line at EOF.
++
+warning: 2 lines add whitespace errors.
+
+
+## reconstructed pre-fix targeted tests
+exit: 1
+stdout:
+<empty>
+stderr:
+test_boolean_options_fail_safe (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_dynamic_executable_control_tokens_fail_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_help_and_dry_run_only_apply_before_double_dash (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_option_values_are_not_help_or_dry_run_exemptions (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_push_set_upstream_flags_preserve_genuine_dry_runs (tests.test_strict_parser_regressions.StrictParserRegressions) ... FAIL
+test_invalid_autoload_is_one_parseable_object_with_warning_and_context (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_lexer_failures_fail_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_malformed_payload_contracts_are_single_json_objects (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_parent_git_config_push_is_guarded (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_unknown_shell_syntax_fails_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+
+======================================================================
+FAIL: test_git_push_set_upstream_flags_preserve_genuine_dry_runs (tests.test_strict_parser_regressions.StrictParserRegressions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private<TEMP>/reconstructed/tests/test_strict_parser_regressions.py", line 92, in test_git_push_set_upstream_flags_preserve_genuine_dry_runs
+    self.assertEqual((stdout, stderr), ("", ""), command)
+AssertionError: Tuples differ: ('{"hookSpecificOutput": {"hookEventName": [433 chars], '') != ('', '')
+
+First differing element 0:
+'{"hookSpecificOutput": {"hookEventName": [428 chars]}}\n'
+''
+
++ ('', '')
+- ('{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": '
+-  '"Fleetcraft strict delegation guard matched: git push. This hook classified '
+-  'the command before execution. Strict mode requests user confirmation for '
+-  'this publish-shaped action. Confirm the exact target, approval, verification '
+-  'evidence, and secret preflight.", "permissionDecision": "ask", '
+-  '"permissionDecisionReason": "Fleetcraft strict mode requires confirmation '
+-  'for a publish-shaped command."}}\n',
+-  '') : git push -u --dry-run origin main
+
+----------------------------------------------------------------------
+Ran 10 tests in <DURATION>
+
+FAILED (failures=1)
+
+
+## current candidate targeted tests
+exit: 0
+stdout:
+<empty>
+stderr:
+test_boolean_options_fail_safe (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_dynamic_executable_control_tokens_fail_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_help_and_dry_run_only_apply_before_double_dash (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_option_values_are_not_help_or_dry_run_exemptions (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_git_push_set_upstream_flags_preserve_genuine_dry_runs (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_invalid_autoload_is_one_parseable_object_with_warning_and_context (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_lexer_failures_fail_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_malformed_payload_contracts_are_single_json_objects (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_parent_git_config_push_is_guarded (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+test_unknown_shell_syntax_fails_closed (tests.test_strict_parser_regressions.StrictParserRegressions) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in <DURATION>
+
+OK
+
+
+verification: PASS

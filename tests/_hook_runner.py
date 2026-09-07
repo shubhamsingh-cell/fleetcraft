@@ -54,7 +54,7 @@ def run_hook_subprocess(hook_key, stdin_text, env, timeout=TIMEOUT):
     """
     path = HOOKS_DIR / HOOK_FILES[hook_key]
     return subprocess.run(
-        [sys.executable, str(path)],
+        [sys.executable, "-B", str(path)],
         input=stdin_text,
         capture_output=True,
         text=True,

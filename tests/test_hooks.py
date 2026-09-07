@@ -48,7 +48,10 @@ import os
 import unittest
 from pathlib import Path
 
-from _hook_runner import IsolatedHookTestCase, TIMEOUT
+try:  # Supports both `unittest discover` and `discover -s tests`.
+    from ._hook_runner import IsolatedHookTestCase, TIMEOUT
+except ImportError:
+    from _hook_runner import IsolatedHookTestCase, TIMEOUT
 
 
 # =============================================================================
@@ -426,7 +429,7 @@ class TestSkillRoutingGuard(IsolatedHookTestCase):
         proc = self.run_hook_json(self.HOOK, {"prompt": "draft an update for the CEO on this"})
         data = self.assert_fires(proc, contains=self.HEADER)
         self.assertIn(
-            "fable-judgment section 3 register rule",
+            "Register rule:",
             data["hookSpecificOutput"]["additionalContext"],
         )
 
@@ -476,7 +479,7 @@ class TestSkillRoutingGuard(IsolatedHookTestCase):
             self.HOOK, {"prompt": "this is worth remembering, turn this into a lesson"}
         )
         data = self.assert_fires(proc, contains=self.HEADER)
-        self.assertIn("incident-miner skill", data["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("incident-mining workflow", data["hookSpecificOutput"]["additionalContext"])
         # negative control for this category is test_silent_on_ordinary_code_discussion /
         # test_silent_on_totally_unrelated_prompt above -- incident-capture has no
         # separate object gate to violate, only the intent phrase itself.
@@ -490,7 +493,7 @@ class TestSkillRoutingGuard(IsolatedHookTestCase):
         data = self.assert_fires(proc)
         ctx = data["hookSpecificOutput"]["additionalContext"]
         self.assertIn("duckdb skill", ctx)
-        self.assertIn("fable-judgment section 3 register rule", ctx)
+        self.assertIn("Register rule:", ctx)
 
     # -- fail-open / robustness --------------------------------------------------
     def test_fail_open_robustness(self):
@@ -540,7 +543,7 @@ class TestToolRoutingGuard(IsolatedHookTestCase):
     # -- deny-then-allow contract, end to end -------------------------------
     def test_docs_url_deny_then_retry_allowed(self):
         state = self._state_dir("deny-allow")
-        env = {"CLAUDE_TOOL_ROUTING_STATE_DIR": state}
+        env = {"CLAUDE_TOOL_ROUTING_STATE_DIR": state, "CLAUDE_TOOL_ROUTING_ENFORCE": "1"}
         payload = {
             "tool_name": "WebFetch",
             "tool_input": {"url": self.DOCS_URL},
@@ -561,7 +564,7 @@ class TestToolRoutingGuard(IsolatedHookTestCase):
         """A DIFFERENT session_id must get its own fresh deny -- the marker
         is keyed on session, not globally."""
         state = self._state_dir("per-session")
-        env = {"CLAUDE_TOOL_ROUTING_STATE_DIR": state}
+        env = {"CLAUDE_TOOL_ROUTING_STATE_DIR": state, "CLAUDE_TOOL_ROUTING_ENFORCE": "1"}
         payload_a = {
             "tool_name": "WebFetch",
             "tool_input": {"url": self.DOCS_URL},
@@ -736,10 +739,13 @@ class TestRetrievalHonestyGuard(IsolatedHookTestCase):
         proc = self.run_hook_json(self.HOOK, {"transcript_path": tpath, "session_id": "sess-b"})
         self.assert_silent(proc)
 
-    def test_tell_with_dispatched_subagent_allows(self):
-        """A dispatched research subagent (Agent/Task/SendMessage tool use)
-        counts as retrieval too, independent of the direct-MCP-call path
-        exercised above."""
+    def test_tell_with_dispatched_subagent_blocks_until_retrieval_is_observed(self):
+        """Dispatching work is not evidence that its retrieval occurred.
+
+        A Task/Agent/SendMessage entry only records delegation.  The guard must
+        continue to block an unverifiability tell until the parent transcript
+        records an actual retrieval attempt.
+        """
         tpath = self._write_transcript(
             "b2_tell_with_subagent",
             [
@@ -749,7 +755,8 @@ class TestRetrievalHonestyGuard(IsolatedHookTestCase):
             ],
         )
         proc = self.run_hook_json(self.HOOK, {"transcript_path": tpath, "session_id": "sess-b2"})
-        self.assert_silent(proc)
+        data = json.loads(proc.stdout.strip())
+        self.assertEqual(data.get("decision"), "block")
 
     # -- (c) stop_hook_active: true -> never block (no loops) -------------------
     def test_stop_hook_active_never_blocks(self):

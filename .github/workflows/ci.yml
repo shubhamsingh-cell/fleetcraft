@@ -11,41 +11,98 @@ jobs:
   validate:
     name: validate (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.9", "3.11", "3.13"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Set up pinned Claude Code CLI
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.1
+          package-manager-cache: false
+
+      - name: Install pinned Claude Code CLI
+        run: |
+          test "$(node --version)" = "v22.22.1"
+          npm ci --prefix .github/ci/claude-cli
+          test "$(.github/ci/claude-cli/node_modules/.bin/claude --version)" = "2.1.263 (Claude Code)"
+          echo "$PWD/.github/ci/claude-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Run repo validator
         run: python3 scripts/validate.py
 
-      - name: Check for tests/ directory
-        id: check-tests
+      - name: Run required stdlib tests
         run: |
-          if [ -d "tests" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-          fi
+          test -d tests
+          test -n "$(find tests -name 'test_*.py' -print -quit)"
+          python3 -m unittest discover -s tests -v
 
-      - name: Install pytest
-        if: steps.check-tests.outputs.present == 'true'
-        run: python3 -m pip install --quiet pytest
+      - name: Verify checked-in generated plugin
+        run: |
+          python3 scripts/check_plugin_parity.py
+          python3 plugins/fleetcraft/scripts/fleetcraft-doctor.py
+          python3 scripts/validate_plugin.py
+          python3 scripts/clean_install_smoke.py
 
-      - name: Run tests/ (present in this checkout)
-        if: steps.check-tests.outputs.present == 'true'
-        run: python3 -m pytest tests/ -q
+      - name: Validate offline evaluation corpus
+        run: python3 scripts/evaluate_skills.py
 
-      - name: Skip tests (no tests/ directory yet)
-        if: steps.check-tests.outputs.present == 'false'
-        run: echo "No tests/ directory in this checkout — skipping pytest step."
+  tag-install-contract:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.1
+      - name: Install pinned Claude Code CLI
+        run: |
+          test "$(node --version)" = "v22.22.1"
+          test "$(npm --version)" = "10.9.4"
+          npm ci --prefix .github/ci/claude-cli
+          test "$(.github/ci/claude-cli/node_modules/.bin/claude --version)" = "2.1.263 (Claude Code)"
+          echo "$PWD/.github/ci/claude-cli/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Anchor tag and install public package in isolation
+        env:
+          FLEETCRAFT_TAG: ${{ github.ref_name }}
+          FLEETCRAFT_EVENT_SHA: ${{ github.sha }}
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/fleetcraft-tag-config
+        run: |
+          git fetch --force origin "refs/tags/$FLEETCRAFT_TAG:refs/tags/$FLEETCRAFT_TAG"
+          event_commit="$(git rev-parse "$FLEETCRAFT_EVENT_SHA^{commit}")"
+          test "$event_commit" = "$(git rev-parse "refs/tags/$FLEETCRAFT_TAG^{commit}")"
+          python3 scripts/check_release_version.py --tag "$FLEETCRAFT_TAG"
+          claude plugin marketplace add "shubhamsingh-cell/fleetcraft@$FLEETCRAFT_TAG"
+          claude plugin install fleetcraft@fleetcraft
+          install_path="$(python3 -c 'import json,os; from pathlib import Path; print(json.loads((Path(os.environ["CLAUDE_CONFIG_DIR"])/"plugins"/"installed_plugins.json").read_text())["plugins"]["fleetcraft@fleetcraft"][0]["installPath"])')"
+          python3 -B "$install_path/scripts/fleetcraft-doctor.py"
+          strict_output="$(printf '%s' '{"tool_input":{"command":"git push origin main"}}' | CLAUDE_PLUGIN_OPTION_DELEGATION_MODE=strict python3 -B "$install_path/hooks/fleet-delegation-guard.py")"
+          test "$(printf '%s' "$strict_output" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecision"])')" = ask
+          git fetch --force origin "refs/tags/$FLEETCRAFT_TAG:refs/tags/$FLEETCRAFT_TAG"
+          test "$event_commit" = "$(git rev-parse "refs/tags/$FLEETCRAFT_TAG^{commit}")"
+          expected="${RUNNER_TEMP}/fleetcraft-expected"; mkdir "$expected"
+          git archive "$event_commit:plugins/fleetcraft" | tar -x -C "$expected"
+          diff -ru "$expected" "$install_path"

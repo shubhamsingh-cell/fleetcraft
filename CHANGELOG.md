@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 integration candidate — unreleased
+
+- Reconciles v0.2 source workflows and the earlier plugin-hardening candidate.
+- Keeps one canonical source tree with a generated, parity-checked plugin.
+- Preserves eleven skills and four roles; adds explicit behavior-evaluation machinery.
+- Repairs retrieval evidence, optional routing, and unsafe performance instructions.
+- Adds source revision/license records, compatibility and reconciliation guidance.
+- Separates observed validation from unexecuted or incomplete release/behavior gates.
+
 ## [Unreleased]
 
 <!--
