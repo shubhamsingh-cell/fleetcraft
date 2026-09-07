@@ -29,3 +29,6 @@ unquoted):
   (b) build quality — what you ran (tests/lint/build) and the actual results.
 - **Report honestly.** Name the artifact observed for every claim. If something failed,
   the failure IS the report — never paper over it.
+- **Library/API facts:** before citing any library/framework behavior, version,
+  or config from memory, query context7 MCP (`ToolSearch "select:mcp__context7__query-docs,mcp__context7__resolve-library-id"`)
+  — training data trails current releases (2026-08-27 audit: docs cited with no call).

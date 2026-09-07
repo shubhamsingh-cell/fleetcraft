@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run repo validator
+        run: python3 scripts/validate.py
+
+      - name: Check for tests/ directory
+        id: check-tests
+        run: |
+          if [ -d "tests" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install pytest
+        if: steps.check-tests.outputs.present == 'true'
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run tests/ (present in this checkout)
+        if: steps.check-tests.outputs.present == 'true'
+        run: python3 -m pytest tests/ -q
+
+      - name: Skip tests (no tests/ directory yet)
+        if: steps.check-tests.outputs.present == 'false'
+        run: echo "No tests/ directory in this checkout — skipping pytest step."

@@ -47,7 +47,9 @@ Sonnet eyeballing a diff does not.
    studies: real artifact or explicit "illustrative" label — or the surface doesn't
    ship regardless of how good it looks (precedent: fabricated testimonials found on
    a live marketing homepage; a "redacted case-study" proof card vetoed on another
-   surface until a real engagement existed).
+   surface until a real engagement existed). Positive reference: unitedcarriers.com
+   stacks stats + testimonials + partner logos + case studies in one scroll, all
+   traceable — see the harvested anti-cliché catalog below for detail.
 4. **Regression is a veto too.** On any previously-approved surface (a product hub, a
    slide-deck template, a homepage redesign), judge against the last APPROVED render,
    not against nothing — copy-pasted sections, fallback styles and template defaults
@@ -91,12 +93,44 @@ full judging round when skipped.
   the documented failure mode. npx-only, never installed; anything needing computed
   style, IDL state, or a real Tab keypress still goes through the browser tools above.
 
+**Observed vs. inferred — label which is which.** A screenshot is evidence of exactly one
+viewport, one theme, one state, at one moment. Everything the surface *implies* beyond that
+— breakpoint behavior, hover/focus interactions, scroll choreography, loading and empty
+states, real asset fidelity — is **inferred** until separately rendered and captured. Say
+which is which in the verdict: an inferred claim recorded as observed is the same failure
+class as an errored lens counted as a pass. Specifically, **a still frame cannot establish
+motion** — judge animation, transitions, and scroll behavior against captured behavior (a
+recording, a stepped capture, an interaction trace), or mark that lens OPEN. And compare
+like with like: the judged render must match the reference's viewport dimensions with fonts
+and assets actually loaded, or a spacing/typography "mismatch" is an artifact of the harness
+rather than the design. Correct structural, spacing, and typography mismatches before
+judging decoration.
+
 ## The panel
 
 For anything shipping to a real audience: 3 parallel judges, each with a DIFFERENT
 lens — never three clones. Dispatch each lens as the pinned `verifier` agent (Opus)
 for high-stakes or brand-new surfaces, `executor` (Sonnet) for iterations — do not
 re-pick a model per dispatch.
+
+**Hand every judge the complete render package. A lens must never rediscover or substitute its
+own render** — two judges scoring two different captures is not a panel, it is two opinions with
+a shared vocabulary, and the disagreement it produces looks like a real finding. Each dispatch
+carries, explicitly:
+
+- `candidate_render` — the exact file path of the capture under judgement.
+- `approved_baseline` — path, or the literal `none`. This is what wires iron rule 4: without it
+  a judge cannot tell a regression from a choice.
+- `artifact_context` — what it is, plus viewport / page / slide number, and which interaction
+  state is shown (default, hover, error, empty, loading).
+- `proof_inventory` — every proof element visible in this capture, so trust & proof judges the
+  page in front of it rather than hunting.
+- `capture_trace` — how the render was produced (URL/command, cache-buster, fonts loaded), so a
+  harness artefact is separable from a design defect.
+
+Each judge returns `status: COMPLETE | OPEN`. `OPEN` is the machine-readable form of the
+errored-lens rule below — a lens that could not judge must not be silently counted as one that
+found nothing.
 
 **mechanism is mandatory** on every panel, and **trust & proof is mandatory** on any
 surface carrying proof elements — they are the only executors of iron rules 2 and 3,
@@ -130,9 +164,9 @@ verdict loop or the two hard vetoes.
   it, or report the verdict as INCOMPLETE naming the lens that never returned — "no
   vetoes raised" and "a lens did not complete" must never collapse into the same
   line. No panel may say Ship without a live mechanism verdict and, on any surface
-  carrying proof, a live trust & proof verdict. (Precedent, 2026-07-20 UI
-  verification sweep: two errored verifiers became "sweep clean" and a ~930px
-  defect stayed live in prod.)
+  carrying proof, a live trust & proof verdict. (fable-judgment §4, 2026-07-20
+  motion-engine: two errored verifiers became "sweep clean" and a ~930px defect
+  stayed live in prod.)
 - **Ship:** median ≥8, zero vetoes.
 - **Iterate:** median 6-7 — apply ONLY each judge's named top change, re-render,
   re-judge (same lenses, fresh context). Two iterations without breaking 8 = the

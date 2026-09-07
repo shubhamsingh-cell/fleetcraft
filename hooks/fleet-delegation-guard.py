@@ -39,6 +39,34 @@ LONG_RUN = re.compile(
     r"|docker\s+(build|compose\s+up)"
 )
 
+# 2026-08-27 invocation audit: trivy/osv-scanner had ZERO invocations in 30d
+# while gitleaks fired 13x -- the difference is that this guard NAMES gitleaks
+# at commit time and nothing names the vet lane at install time. Package-BEARING
+# installs only: bare `npm install`/`pip install -r reqs.txt` (restoring an
+# existing lockfile) stay silent -- nagging every dependency restore would be
+# the wolf-cry that gets the whole guard ignored.
+INSTALL = re.compile(
+    r"\b(?:npm|pnpm|yarn)\s+(?:add|install)\s+(?!-)(?:-[-\w]+\s+)*[a-z@]"
+    r"|\bpip3?\s+install\s+(?!-)(?:--[-\w]+\s+)*[a-zA-Z]"
+    r"|\buv\s+(?:add|pip\s+install)\s+[a-zA-Z]"
+    r"|\bcargo\s+install\s+[a-z]"
+    r"|\bbrew\s+install\s+[a-z]"
+    r"|\bgem\s+install\s+[a-z]",
+)
+
+_INSTALL_MSG = (
+    "fleet-orchestrator guard: this Bash call INSTALLS a third-party package. "
+    "The vendor-vet gate (fleet-orchestrator Lever 3) applies BEFORE install: "
+    "provenance/typosquat check, network behavior, install side-effects, rollback "
+    "recipe written first, isolated venv/prefix, pinned version, --ignore-scripts "
+    "on first contact. After manifest/lockfile changes, the osv-scanner skill "
+    "offers an offline vulnerability audit (⚠ it exits 0 on a failed DB fetch -- "
+    "verify it actually scanned) and the trivy skill covers container/fs scans. "
+    "2026-08-27 audit: zero osv-scanner/trivy invocations in 30d; this reminder "
+    "exists to close that. A deliberate re-install of an already-vetted package: "
+    "proceed, this is reminder-only."
+)
+
 _LONG_RUN_MSG = (
     "fleet-orchestrator guard: this Bash call is a LONG-LIVED RUN "
     "(ship script / full suite / build / migration). This shape is NOT delegable, "
@@ -61,9 +89,9 @@ _LONG_RUN_MSG = (
 # same sentence instead of drifting apart over future edits.
 _GITLEAKS_PREFLIGHT = (
     "Before any commit or push that includes new or modified source/config, "
-    "the gitleaks skill (runtime ~/.codex/tools/gitleaks/bin/gitleaks) offers "
-    "a redacted local secret preflight — run it on the staged diff if it "
-    "hasn't been run this session; findings stay redacted."
+    "the gitleaks skill offers a redacted local secret preflight — run "
+    "`gitleaks` on the staged diff if it hasn't been run this session; "
+    "findings stay redacted."
 )
 
 _DEPLOY_MSG = (
@@ -92,36 +120,67 @@ _DEPLOY_MSG = (
 _SUBAGENT_DEPLOY_MSG = "fleet-orchestrator guard: " + _GITLEAKS_PREFLIGHT
 
 
+def _emit_unchecked() -> None:
+    """Emit the "shape detection did not run" reminder.
+
+    Do NOT go silent on a payload we could not read. A guard that fails quietly is
+    indistinguishable from a guard that saw nothing worth flagging — it would stop
+    guarding forever (e.g. if the payload shape ever changes) and nobody would know.
+    The skill's own stance is "fail toward reminding — a false positive is harmless
+    because the text tells subagents to ignore it", so we still emit, and we say the
+    read failed so it is visible.
+    """
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "additionalContext": (
+                "fleet-orchestrator guard: could not parse this tool call's payload, "
+                "so shape detection did NOT run — treat this as an unchecked call, not "
+                "a cleared one. If this is a mechanical multi-step task (edit+commit+push, "
+                "build+deploy) apply the delegation rule yourself; if it is a long-lived "
+                "run (ship script, full suite, migration), the orchestrator runs it as "
+                "harness-tracked work rather than delegating it. If this message repeats, "
+                "the guard needs repair: ~/.claude/hooks/fleet-delegation-guard.py"
+            ),
+        }
+    }))
+
+
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
     except Exception:
-        # Do NOT go silent here. A guard that fails quietly is indistinguishable
-        # from a guard that saw nothing worth flagging — it would stop guarding
-        # forever (e.g. if the payload shape ever changes) and nobody would know.
-        # The skill's own stance is "fail toward reminding — a false positive is
-        # harmless because the text tells subagents to ignore it", so on a parse
-        # failure we still emit, and we say the parse failed so it is visible.
-        print(json.dumps({
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "additionalContext": (
-                    "fleet-orchestrator guard: could not parse this tool call's payload, "
-                    "so shape detection did NOT run — treat this as an unchecked call, not "
-                    "a cleared one. If this is a mechanical multi-step task (edit+commit+push, "
-                    "build+deploy) apply the delegation rule yourself; if it is a long-lived "
-                    "run (ship script, full suite, migration), the orchestrator runs it as "
-                    "harness-tracked work rather than delegating it. If this message repeats, "
-                    "the guard needs repair: ~/.claude/hooks/fleet-delegation-guard.py"
-                ),
-            }
-        }))
+        _emit_unchecked()
         return
 
-    cmd = (payload.get("tool_input") or {}).get("command") or ""
+    # Valid JSON is not the same as the expected shape. A payload whose top level
+    # or whose `tool_input` is not a dict, or whose `command` is not a string, used
+    # to raise past this point and exit 1 with a traceback — a fail-CLOSED crash in
+    # a guard whose entire contract is failing open. Route every wrong shape into
+    # the same "unchecked, not cleared" reminder the parse failure uses.
+    if not isinstance(payload, dict):
+        _emit_unchecked()
+        return
+
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        _emit_unchecked()
+        return
+
+    cmd = tool_input.get("command") or ""
+    if not isinstance(cmd, str):
+        _emit_unchecked()
+        return
     is_long_run = bool(LONG_RUN.search(cmd))
     is_deploy = bool(SHAPES.search(cmd))
     if not (is_long_run or is_deploy):
+        if INSTALL.search(cmd):
+            print(json.dumps({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "additionalContext": _INSTALL_MSG,
+                }
+            }))
         return
 
     # Subagent detection differs by shape, and the asymmetry is the whole point:

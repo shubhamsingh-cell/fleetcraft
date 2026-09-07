@@ -25,9 +25,25 @@ description: >-
 > their rules embedded in their own definitions; a vacuous-regression-test check, a
 > vendor-vet gate, anchored review rubrics, and a fabricated-proof gate class were added
 > to the adversarial final pass; and a fan-out pattern for post-cutoff/viral factual
-> claims was added to "When to fan out and fight." Each addition was mined from a real
-> failure observed in production use — see the precedents cited inline throughout this
-> file rather than a separate version history.
+> claims was added to "When to fan out and fight." More recently: a fourth pinned
+> agent, **`strategist`** (Fable-pinned), gave the upward-escalation path a concrete
+> destination for taste/brand/voice/strategy calls that sit above the session tier; an
+> **alias-resolution technique** settled what a `model:` alias actually reaches — read
+> the model name an API ERROR quotes, since both success responses and a subagent's own
+> self-report are unreliable narrators — which confirmed `fable` resolves for real and
+> left `opus` still unmeasured; a **confidence-scored findings rule** now has every
+> parallel review pass score each finding's reachability 0-100 and drop anything under
+> 80 rather than reporting it hedged; an **agent-definition reload lag** was documented
+> — a just-edited agent type is not the one a same-session dispatch reaches, so an agent
+> behavior edit needs testing from a fresh session; an **install-delegation exemption**
+> now states out loud that plugin/marketplace/config installs cannot be delegated (a
+> subagent correctly refuses relayed consent for that channel) and stay
+> orchestrator-owned, interactive-terminal work; and the enforcement hooks grew into a
+> **six-hook family** (session autoload, delegation guard, two routing guards, the one
+> blocking tool-routing guard, and a retrieval-honesty guard), all covered by a shared
+> selftest with negative controls. Each addition was mined from a real failure observed
+> in production use — see the precedents cited inline throughout this file rather than
+> a separate version history.
 
 **Core rule (read this even if you read nothing else):** before executing more than
 ~2-3 tool calls yourself for a mechanical multi-step task (edit+commit+push,
@@ -80,8 +96,19 @@ and the two supporting facts are NOT equally strong:
     unreliable narrators of their own version (training-data echo), so a self-report is a HINT,
     never a measurement. v13's error was asserting an unmeasured alias claim; the v13.1 "refutation"
     then over-trusted a self-report — the same error with the sign flipped.
-  • So: what a subagent alias actually resolves to (`opus`, and `fable`) is **genuinely UNKNOWN
-    here**, not "known to be 4.8." Do not encode either belief as fact. Treat it as a
+  • ⭐ **`fable` RESOLVED 2026-09-07 — the alias works.** A `strategist` agent pinned
+    `model: fable` failed with an API 429 whose text named the model actually sent:
+    `model sent to the API: claude-fable-5-1`. That is an API/harness signal, not a self-report,
+    so it meets this file's own evidence bar. Two consequences: (a) `model: "fable"` in agent
+    frontmatter genuinely reaches Fable 5.1 — the v14 upward-escalation path is real, not
+    aspirational; (b) **a Fable-pinned agent is unusable whenever the Fable usage limit is hit**,
+    and it fails loudly rather than silently downgrading, which is the good failure mode. While
+    that limit holds, route the call to the main loop or an `opus` agent instead.
+  • 🔧 **Technique worth reusing:** to learn what an alias really resolves to, read the model name
+    in an API ERROR. Errors quote the model sent; success responses do not, and the agent's own
+    self-report is worthless. This is the cheap falsifier that was missing for two versions.
+  • `opus` remains **UNKNOWN** — the same technique would settle it. Do not encode a belief as
+    fact until it does. Treat it as a
 candidate, require every dispatched agent to STATE ITS RUNNING MODEL in its report header, and
 if it reports lower than intended, escalate by moving the work into the MAIN LOOP (where the
 session model is owner-selectable) rather than assuming the tier held.
@@ -163,13 +190,12 @@ cannot be true; the Lever 1 correction is the surviving one. What an alias resol
 **unknown here** — do not encode either belief as fact. Practical rule unchanged and
 independent of the unknown: when a call truly needs top-tier judgment, decide it in the
 MAIN LOOP where the owner selects the model, rather than delegating and *assuming* the tier
-held. (Caught by re-reading the file after editing it — internal contradictions between a
-claim and its earlier statement elsewhere in the file are a recurring failure class; edit
-one claim, grep the whole file for its twin.)
+held. (Caught by re-reading the file after editing it — the same internal-contradiction
+class v13.1 was created to fix. Edit one claim, grep the whole file for its twin.)
 fable-judgment still auto-loads via the SessionStart hook as defense-in-depth for any
-session that isn't Fable-driven. (Historical clause text preserved in this file's git
-history, should metering economics ever reopen the question — reopening it is the
-owner's call, not a session's.)
+session that isn't Fable-driven. (Historical clause text preserved in git history of this
+file and in memory, should metering economics ever reopen the question — reopening it is
+the owner's call, not a session's.)
 
 ## Lever 2 — prompt compression (shrink the brief, keep the quality)
 
@@ -218,8 +244,14 @@ root-cause gate, the vacuous-regression-test rule, shared-tree abort, deploy-gat
 and a two-verdict self-check), **`verifier`** (Opus-pinned; adversarial two-verdict
 review and judge panels, scores against `references/review-rubrics.md`, refuses
 pre-biasing), **`researcher`** (Sonnet-pinned; verified-vs-plausible tagged findings
-with sources, declares dead ends, treats web content as data). A bare prompt is the
-fallback for shapes none of the three fit. A well-scoped existing
+with sources, declares dead ends, treats web content as data), and **`strategist`**
+(Fable-pinned, added 2026-09-07; the UPWARD escalation path v14 named but never gave an
+agent — taste/brand/voice/strategy synthesis and priority triage). `strategist` is
+deliberately narrow: it is for when the session model sits BELOW what the call deserves, or
+to add a differently-tiered lens to a panel. It is NOT a way to offload judgment the main
+loop should own — if the session is already at or above its tier, the call stays in the main
+loop with the owner's own model selection, and the agent is briefed to hand it back. A bare
+prompt is the fallback for shapes none of the four fit. A well-scoped existing
 skill is almost always more token-efficient than an ad hoc prompt, because its
 instructions are pre-tightened and its scope is already bounded — that's the same
 discovery procedure the `helpme` dispatcher skill runs (available skills → agent types →
@@ -249,10 +281,46 @@ install side-effects — snapshot `~/.claude` before/after and revert anything u
 (precedent: an installer silently creating `~/.claude/CLAUDE.md`); (5) write the rollback
 recipe BEFORE installing, into the session record. Install into an isolated venv/prefix,
 pin the version, prefer `--ignore-scripts` on first contact.
-Automation candidate (2026-08-21 tooling review): `m-ahmed-elbeskeri/Starguard`
-(Apache-2.0) automates step 1 — fake-star burst detection, dependency-hijack and license
-red-flags as a CLI pass. Vet it once itself, then it turns per-repo star forensics from a
-judgment call into a mechanical check. Until vetted: reference, not dependency.
+(6) **read a skill/plugin bundle as an adversarial FILE TREE, not as markdown.** Before reading
+any `SKILL.md` as prose, list every non-`.md` file in the bundle (scripts, `.pyc`, data, configs),
+grep the whole tree for zero-width / bidi / private-use codepoints and mixed-script homoglyphs, and
+treat any compiled or encoded artifact as UNREVIEWED until decompiled. Rationale: Tencent's
+AI-Infra-Guard assessment (14,560 runs) measured a hidden-unicode channel succeeding 25.5% of the
+time in *file* mode versus 0.0% in *text* mode — i.e. reading the prose is exactly the mode that
+misses it. (Measured against DeepSeek Harness, not Claude Code — directional for this stack, not
+measured on it. Install nothing from that project: its scanner egresses to openrouter.ai by
+default and its platform installs via curl|sh.)
+⚠ **Live typosquat, recorded 2026-09-07:** PyPI `postgres-mcp-pro` 0.4.2 impersonates
+`crystaldba/postgres-mcp`, whose real package is plain `postgres-mcp` at 0.3.0 — the fake carries
+the HIGHER version number and the product's marketing name. This is the typosquat-in-both-
+directions case step 1 warns about, found in the wild: never install by the product name.
+
+**StarGuard automates step 1** (fake-star burst detection, dependency-hijack and license
+red-flags as a CLI pass) once installed from PyPI (`pip install starguard`). Two facts a
+future session needs, both measured:
+- The package's own console-script entry point is **BROKEN** — it does `from starguard
+  import main`, but package-level `main` is a *module*, not a callable, so the installed
+  `starguard` command dies with `TypeError: 'module' object is not callable`. The real
+  entry point is `starguard.cli:main` — call it directly until the package fixes its own
+  entry, e.g. `python3 -c "from starguard.cli import main; main()" owner/repo [--burst-only]
+  [-f markdown]` (verified running 2026-09-07 against `addyosmani/agent-skills`: Fake Star
+  Index 0.00, LOW RISK).
+- Authenticate the GitHub calls rather than running unauthenticated — reusing a token from
+  `gh auth token` dodges the unauthenticated GitHub API rate limit; check the tool's own
+  `--help` for the exact flag/env var this version expects.
+Star forensics is therefore a mechanical check now, not a judgment call. Caveat: `--burst-only`
+returned an empty window on one repo ("No star data found within 0 days"), so treat an empty
+burst report as INCONCLUSIVE and re-run in full mode — not as a clean bill of health.
+
+**Never judge skill/context pruning by `/context`'s total or its System-tools row.** Tokens
+removed from the Skills row reappear 1:1 under System tools (anthropics/claude-code #85439,
+maintainer-confirmed, unfixed as of 2.1.263), so the total is not a measurement of what you cut.
+Measure with `/skill-doctor` (ships in CLI ≥2.1.261) and cut cost by progressive disclosure inside
+a skill rather than by deleting skills. **Separately and confirmed by direct test 2026-09-07:** the
+skill *catalog* has a description budget of roughly 19K chars, and skills past it render as bare
+names with NO description — silently unroutable. Moving the 15 teammate-specific copilots to a
+depth-2 subdirectory (out of discovery) dropped the catalog from 23,509 to 15,844 chars and
+restored descriptions to `trivy`, `yq`, `zizmor` and 7 others — verified in a fresh session.
 
 **Context-light screenshots (2026-08-20 vet).** When a
 verification step only needs a rendered screenshot — not page interaction — prefer
@@ -292,12 +360,12 @@ verification (read_page, form testing, console) still uses the existing browser 
   commit) before the fix passes review — paste the failing output; a test that passes
   pre-fix certifies nothing (live catch: f0fd921's regression test, 2026-07-15).
 - **Query the code graph before reading files.** If the repo has a `graphify-out/`
-  index, point subagents at `/graphify query` /
+  index (a production CRM does, since 2026-07-15), point subagents at `/graphify query` /
   `explain` / `path` instead of having each one re-grep and re-read the codebase — the
   graph answers "what calls X / where does Y live" for a fraction of the tokens, and
   the savings multiply across every agent in a fleet. Re-index after big code changes
-  (`~/.claude/tools/graphify-venv/bin/graphify extract . --code-only`); code-only mode
-  is fully local, never sends anything anywhere.
+  (`graphify extract . --code-only`); code-only mode is fully local, never sends
+  anything anywhere.
 - **Don't over-deliberate small fleets.** For 2-3 short, clearly-scoped subagent calls,
   apply the three levers as quick defaults (Sonnet, terse brief, one routing glance)
   rather than a deliberate per-lever pass — the full checklist earns its overhead at
@@ -346,7 +414,7 @@ for specific task shapes — not a default:
   **An errored or timed-out verifier is an OPEN finding, never a dead one** — re-dispatch
   it or surface it as unverified; "no confirmed findings" and "verification did not
   complete" must never collapse into the same report line. Precedent: two verifier agents
-  errored in a UI verification sweep, the synthesis filtered on `verdict.real && reachable`,
+  errored in a motion-engine sweep, the synthesis filtered on `verdict.real && reachable`,
   and a defect then live in prod was reported clean (2026-07-20).
 - **Routine, well-scoped execution**: one Sonnet agent + the final-pass gate. No debate
   club — every extra agent has a token floor before it produces anything useful.
@@ -408,7 +476,15 @@ a fleet).
   backgrounded and died with the subagent's turn (2026-07-16); the fix was a sharper
   brief, and the very next delegated ship backgrounded it anyway, said it would wait,
   ended its turn, and the run died silently mid-suite for 45 minutes (2026-07-17). A
-  failure that survives its wording fix needs a structural fix, not better wording. Note
+  failure that survives its wording fix needs a structural fix, not better wording.
+  **Second, harder mechanism — surfaced by the 2026-09-07 eval, not previously written down:**
+  even a perfectly obedient subagent cannot honour "foreground and wait" for a 40-minute run,
+  because a blocking Bash call is capped at 600000 ms (10 minutes). So the sharpened brief
+  fails on two independent mechanisms, not one: the turn-death AND the call ceiling. Any
+  "wait for completion" phrasing is therefore asking for something the tool contract cannot
+  deliver — which is why the fix is orchestrator-owned background execution, full stop.
+  (Two of three cold eval agents derived this ceiling unprompted; it is a fact about the tool,
+  verifiable in the Bash tool's own timeout contract, not a model opinion.) Note
   this bounds the re-delegate rule in the permission bullet below: re-delegating is the
   right answer for a denied push, never for a run that keeps dying with the turn.
 - **Shared/dirty worktree — set abort conditions before delegating a push.** If a repo
@@ -421,7 +497,24 @@ a fleet).
   the claim," and competent agents verify by *executing* — reverts, restores, even
   mutation testing (swapping a `<button>` for `<span>`) — not by reading only; their
   restores are correct relative to their own start-of-panel snapshot, not relative to
-  concurrent edits. Give each panel its own isolated worktree (Workflow `isolation:
+  concurrent edits. ✅ **Frontmatter CAN enforce this — and there is a trap in testing it. MEASURED 2026-09-07.**
+  `disallowedTools: Write, Edit, NotebookEdit` on `~/.claude/agents/verifier.md` DOES work: in a
+  fresh CLI session the dispatched verifier reported `Write` absent from its tool list. Keep the
+  field; it is a real structural safeguard, not decoration.
+  ⚠ **The trap that nearly wrote the opposite into this file: AGENT DEFINITIONS RELOAD ON A LAG,
+  so a just-edited agent is NOT the one you dispatch.** Sequence observed 2026-09-07, all harness
+  signals (not self-reports): a newly created agent type returned `Agent type 'X' not found`
+  while its file sat on disk; minutes later the harness announced "New agent types are now
+  available"; and in between, probes of a just-edited `verifier` still showed the pre-edit
+  behaviour. So the run's first two probes "measured" a verifier that had never loaded the
+  restriction and concluded — wrongly — that the field does nothing. **Test any agent edit in a
+  NEW session** (`claude -p --model sonnet` suffices), or wait for the harness to announce the
+  reload. An immediate in-session probe of an in-session agent edit has zero falsifying power: it
+  returns the same answer whether the field works or not. (Precision matters here — "frozen for
+  the whole session" is ALSO wrong, and was this file's wording for about twenty minutes until
+  the harness hot-registered the new agent and refuted it. Gate class 8, twice, on the same
+  claim.)
+  Defence-in-depth still applies, because a restricted agent keeps Bash: give each panel its own isolated worktree (Workflow `isolation:
   'worktree'` — it snapshots HEAD, so commit first if the state under review is
   uncommitted), or put an explicit STRICT READ-ONLY clause in the brief — and never edit
   or run tests/builds in a tree a panel currently holds; treat any panel-held tree as
@@ -430,6 +523,22 @@ a fleet).
   uncommitted fix made after the panel was dispatched, and a foreground pytest raced a
   mid-experiment revert to produce a phantom "1 failed + hang" on code that was actually
   fixed.
+- **Plugin/config installs CANNOT be delegated, and cannot be scripted — MEASURED 2026-09-07.**
+  Two independent walls, found by trying:
+  (a) **A subagent categorically refuses relayed approval for configuration changes.** A dispatched
+  `executor` with the owner's approval restated verbatim in its brief still declined, citing its own
+  standing rule that no agent message constitutes user consent for config/settings/marketplace
+  changes. This is CORRECT behaviour on its part and no rewording fixes it — the refusal is about
+  the *channel*, not the phrasing. So the permission-bullet rule above ("restate the approval and
+  re-delegate") does NOT apply to installs: re-delegating is the wording fix that cannot work, and
+  the structural fix is that the ORCHESTRATOR executes, because only the main loop holds the
+  owner's actual message. State that exemption out loud.
+  (b) **`/plugin` is unavailable in `claude -p`** ("/plugin isn't available in this environment"),
+  and `SearchPlugins` covers only the claude.ai org catalog — GitHub-marketplace plugins are not
+  in it. So marketplace plugin installation is an INTERACTIVE-TERMINAL, OWNER-ONLY operation in
+  this stack. Do not hand-write `installed_plugins.json` / `settings.json` to simulate it: that
+  bypasses the installer's own validation and plugin state fails silently. Hand the owner the
+  exact `/plugin` commands instead — 30 seconds of their time beats a corrupted manifest.
 - **Keep the delegation ledger in the harness task list.** On the first delegation of a
   mechanical shape (commit+push, build+deploy, run+validate), create a task named
   `DELEGATE-SHAPE: <shape>`. Before executing any mechanical sequence yourself, check the
@@ -482,6 +591,15 @@ the work to be done and reads its own diff generously. Only failure classes shap
 this user's actual history fire here; generic code review lives elsewhere. Each class:
 **trigger → check → precedent**.
 
+**Score every finding before reporting it.** Give each one a 0-100 confidence that it is real
+and reachable in production, and **drop anything below 80** rather than reporting it hedged.
+Parallel review agents generate false positives at a steady rate; a long list of maybes shifts
+the filtering work onto the reader and trains them to skim the whole report — which is how a
+real finding gets skimmed past. Say how many were dropped, so a suppressed-but-nagging finding
+stays countable. (Convention adapted from Anthropic's official `code-review` plugin, reviewed
+2026-09-07; a per-finding confidence filter is distinct from our effort dial, which sets
+breadth.)
+
 1. **Shared-state races.** Trigger: any commit/push/branch op in a repo with a known
    concurrent agent (a shared production repo: worktree-at-origin/main, shared tree,
    branch switches from other sessions). Check: re-run `git status` + `git log -1`
@@ -492,7 +610,7 @@ this user's actual history fire here; generic code review lives elsewhere. Each 
    Check: `git fetch` first — a local branch ref only advances on an explicit fetch/pull
    in that checkout, so it drifts behind `origin/main` by default and a stale read makes
    the claim confidently wrong. Precedent: a local `main` 2 commits stale reported live
-   work as unmerged; a primary checkout's `main` 28 commits stale because all work
+   geo work as unmerged; a primary checkout's `main` 28 commits stale because all work
    happens in worktrees pushing straight to `origin/main` (both 2026-07-31).
 2. **Deploy gates that fail silently.** Trigger: about to declare anything "deployed."
    Check: verify the gate condition explicitly (commit author email, branch protection,
@@ -532,9 +650,9 @@ this user's actual history fire here; generic code review lives elsewhere. Each 
    Check: every proof element traces to a real artifact (a named client, a real metric,
    a genuine review) or carries an explicit "illustrative" label — otherwise cut it; a
    surface shipping invented proof is a brand liability wearing polish. Precedent: fake
-   testimonials and inflated stat counters found LIVE on a marketing site (2026-07-11
-   triage), and a "redacted case-study" proof card vetoed on another surface until a
-   real engagement existed to back it.
+   testimonials and "0k+" counters found LIVE on a live marketing homepage (2026-07-11
+   triage), and a startup marketing site's "redacted SLA" card vetoed until a real
+   engagement exists.
 
 8. **Falsification, not corroboration — the evidence-grade gap (added 2026-08-21).**
    Trigger: about to record ANY claim as verified / measured / clean / done / consistent /
@@ -601,13 +719,32 @@ sessions where this skill was never loaded. It never blocks anything; subagents 
 to ignore it. If you received this skill without the hook, it works fine as prose-only —
 ask Claude to "install the fleet-orchestrator delegation-guard hook" to add the backstop.
 
-A third pattern in the same family — a `UserPromptSubmit` hook that scans the incoming
-prompt for a task shape and injects a routing reminder before the model starts working
-(e.g. "this looks like a tabular-data task, prefer the installed CSV tool over an ad hoc
-script") — generalizes well beyond delegation specifically; `skill-routing-guard.py` in
-this repo's `hooks/` directory is one such example, scoped to skill routing rather than
-external-service routing. Build your own UserPromptSubmit hooks on the same non-blocking,
-silent-on-no-match contract.
+**The rest of the family.** The two hooks above are part of a five-hook enforcement
+set, all shipped in this repo's `hooks/` and all wired in `~/.claude/settings.json`
+(`examples/settings.json` has the complete block):
+
+- `autoload-judgment` (SessionStart) — injects a judgment skill unconditionally.
+- `fleet-delegation-guard` (PreToolUse/Bash) — deploy, long-run and package-install shapes.
+- `skill-routing-guard` (UserPromptSubmit) — routes a prompt to the matching installed skill.
+- `tool-routing-guard` (PreToolUse/WebFetch|WebSearch) — denies a docs-URL fetch once and
+  allows the retry, rerouting to a docs MCP first. The only hook that denies a tool call.
+- `retrieval-honesty-guard` (Stop) — blocks a turn asserting it cannot verify something
+  when no retrieval actually ran in it.
+
+A sixth pattern in the same family is worth building yourself and is deliberately not
+shipped here, because it can only be written against your own provisioned services: a
+`UserPromptSubmit` hook that scans the prompt for API-shaped asks (scrape/crawl, contact
+enrichment, transactional email, TTS, LLM-gateway routing) and injects the matching
+service in priority order, its env-var path, and an auto-use-vs-confirm-first flag, read
+from a local service-routing map. Silent on no match; it reminds, and never fires a
+side-effecting call itself. Build it on the same non-blocking contract as the others.
+
+All five are exercised with negative controls by this repo's suite in `tests/` — run with
+`python3 -m unittest discover -s tests` or `python3 -m pytest tests/` (59/59 as of
+2026-09-08). The suite's own teeth were checked the way this file demands of any verifier:
+a hook was deliberately gutted to return nothing on every input, and the suite failed on
+exactly the "fires on match" assertions while the "stays silent" ones passed — which is
+the signature the negative-control pairing exists to produce.
 
 **External audit — `/insights`.** If your Claude Code CLI has this command, it analyzes
 your recent usage and writes a report — a genuine outside check on whether the delegation
