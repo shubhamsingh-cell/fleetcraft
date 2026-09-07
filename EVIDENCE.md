@@ -14,7 +14,8 @@ help select references; they do not establish quality.
 | GitHub workflow syntax | actionlint passed | Does not replace exact-commit CI |
 | Credential preflight | Redacted gitleaks scan of publishable files passed | A point-in-time scan, not a security guarantee |
 | Dependency advisory audit | OPEN: offline OSV npm database unavailable | No clean vulnerability verdict |
-| Linux CI/public tag install | Observe exact commit/tag checks on GitHub | Prior main/PR runs do not certify this candidate |
+| Linux CI | Python 3.9/3.11/3.13 passed on `4c3b7df8e6df983828518d2530db5ef809e13d69` | [Exact integration CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34161918923); later code needs fresh CI |
+| Public immutable tag install | Not run for 0.3.0; tag-only job skipped as expected | No stable release tag was cut |
 
 ## Live workflow smoke: mixed, behavioral gate OPEN
 

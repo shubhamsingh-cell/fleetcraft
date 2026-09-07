@@ -10,7 +10,7 @@ Re-run the checks for the exact candidate and target harness.
 | Generated Claude plugin | Generated from canonical sources; parity, strict manifest validation and isolated installation are separate checks. |
 | Local evaluation runtime | macOS, Python 3.9.6, Claude Code 2.1.263; an isolated authenticated print session was observed on 2026-09-08. |
 | Live model identity | Read from actual CLI stream telemetry. The validated live smoke traces reported `claude-sonnet-5`; do not infer other model identities or relative quality. |
-| Linux | Require exact-commit CI; old main/PR success does not certify the integrated candidate. |
+| Linux | Python 3.9/3.11/3.13 source tests and isolated pinned-CLI installation passed on integration commit `4c3b7df`; [CI evidence](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34161918923). |
 | Native Windows/WSL | Unverified; do not infer support from PowerShell matcher text. |
 | Third-party MCP/services | Optional and environment-specific. A named provider is not necessarily installed, connected or authorized. |
 | Skill baseline | Compare equal fixtures and harness flags with Fleetcraft absent. An all-skills-disabled control also disables CLI built-ins and is reported separately. |
