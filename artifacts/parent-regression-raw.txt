@@ -1,0 +1,24 @@
+Fleetcraft parent-baseline regression capture (redacted)
+Captured: 2026-08-30
+
+Environment (secrets intentionally omitted)
+  OS: Darwin 25.5.0 arm64
+  Python: Python 3.9.6
+  Repository: shubhamsingh-cell/fleetcraft
+  Parent commit: bc29addc6d180f798a0297e6ae17085382eb379b
+  Parent hooks/fleet-delegation-guard.py SHA-256:
+    a55294045f574fe34bb0455b15541cf430d136ed7fcd938cac559a0de94a80ad
+
+Command (parent archive, no environment values printed)
+  python3 "$baseline_dir/hooks/fleet-delegation-guard.py" <<'EOF'
+  {"tool_input":{"command":"git -c user.name=example push origin main"}}
+  EOF
+Exit status: 0
+stdout:
+
+stderr:
+
+Behavior-specific failure: the parent guard did not classify a valid Git global
+option preceding `push`; its stdout was empty rather than hook JSON.
+
+No secrets, tokens, home paths, or environment values are present in this capture.

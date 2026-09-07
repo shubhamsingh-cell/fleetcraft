@@ -1,0 +1,149 @@
+name: Verify Fleetcraft
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  runtime:
+    name: runtime (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.22.1
+          package-manager-cache: false
+      - name: Install pinned Claude Code CLI
+        env:
+          FLEETCRAFT_CLI_DIR: ${{ runner.temp }}/fleetcraft-claude-cli
+        run: |
+          cp -R .github/ci/claude-cli "$FLEETCRAFT_CLI_DIR"
+          test "$(node --version)" = "v22.22.1"
+          test "$(npm --version)" = "10.9.4"
+          npm ci --prefix "$FLEETCRAFT_CLI_DIR"
+      - name: Expose pinned Claude Code CLI
+        env:
+          FLEETCRAFT_CLI_BIN: ${{ runner.temp }}/fleetcraft-claude-cli/node_modules/.bin
+        run: echo "$FLEETCRAFT_CLI_BIN" >> "$GITHUB_PATH"
+      - name: Validate plugin runtime
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 plugins/fleetcraft/scripts/fleetcraft-doctor.py
+      - name: Exercise hooks and clean-install contract
+        run: python3 scripts/selftest-guards.py
+      - name: Strictly validate plugin manifests and installation package
+        run: python3 scripts/validate-plugin.py
+      - name: Clean-install smoke
+        run: python3 scripts/clean-install-smoke.py
+
+  release-artifact:
+    name: release artifact (${{ github.ref_name }})
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out immutable push-event object
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.22.1
+          package-manager-cache: false
+      - name: Install pinned Claude Code CLI
+        env:
+          FLEETCRAFT_CLI_DIR: ${{ runner.temp }}/fleetcraft-claude-cli
+        run: |
+          cp -R .github/ci/claude-cli "$FLEETCRAFT_CLI_DIR"
+          test "$(node --version)" = "v22.22.1"
+          test "$(npm --version)" = "10.9.4"
+          npm ci --prefix "$FLEETCRAFT_CLI_DIR"
+          echo "$FLEETCRAFT_CLI_DIR/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Anchor immutable tag to the push-event commit
+        env:
+          FLEETCRAFT_EVENT_SHA: ${{ github.sha }}
+          FLEETCRAFT_TAG: ${{ github.ref_name }}
+        run: |
+          git fetch --force origin "refs/tags/$FLEETCRAFT_TAG:refs/tags/$FLEETCRAFT_TAG"
+          event_commit="$(git rev-parse "$FLEETCRAFT_EVENT_SHA^{commit}")"
+          tag_commit="$(git rev-parse "refs/tags/$FLEETCRAFT_TAG^{commit}")"
+          test "$event_commit" = "$tag_commit"
+          echo "FLEETCRAFT_EVENT_COMMIT=$event_commit" >> "$GITHUB_ENV"
+      - name: Validate exact tag package
+        run: python3 scripts/validate-plugin.py
+      - name: Install public tag into an isolated config
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/fleetcraft-tag-config
+          FLEETCRAFT_TAG: ${{ github.ref_name }}
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          claude plugin marketplace add "shubhamsingh-cell/fleetcraft@$FLEETCRAFT_TAG"
+          claude plugin install fleetcraft@fleetcraft
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          config = Path(os.environ["CLAUDE_CONFIG_DIR"])
+          records = json.loads((config / "plugins" / "installed_plugins.json").read_text())["plugins"]["fleetcraft@fleetcraft"]
+          Path(os.environ["RUNNER_TEMP"], "fleetcraft-install-path.txt").write_text(records[0]["installPath"], encoding="utf-8")
+          PY
+      - name: Verify installed-tag doctor and strict fixture
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/fleetcraft-tag-config
+          FLEETCRAFT_INSTALL_PATH_FILE: ${{ runner.temp }}/fleetcraft-install-path.txt
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          install_path="$(cat "$FLEETCRAFT_INSTALL_PATH_FILE")"
+          python3 "$install_path/scripts/fleetcraft-doctor.py"
+          strict_output="$(printf '%s' '{"tool_input":{"command":"git push origin main"}}' | CLAUDE_PLUGIN_OPTION_DELEGATION_MODE=strict python3 "$install_path/hooks/fleet-delegation-guard.py")"
+          STRICT_OUTPUT="$strict_output" python3 - <<'PY'
+          import json
+          import os
+          output = json.loads(os.environ["STRICT_OUTPUT"])
+          assert output["hookSpecificOutput"]["permissionDecision"] == "ask"
+          PY
+      - name: Compare installed cache to exact tag archive
+        env:
+          FLEETCRAFT_TAG: ${{ github.ref_name }}
+          FLEETCRAFT_INSTALL_PATH_FILE: ${{ runner.temp }}/fleetcraft-install-path.txt
+          FLEETCRAFT_EXPECTED_DIR: ${{ runner.temp }}/fleetcraft-expected
+        run: |
+          event_commit="$(git rev-parse "$FLEETCRAFT_EVENT_COMMIT^{commit}")"
+          git fetch --force origin "refs/tags/$FLEETCRAFT_TAG:refs/tags/$FLEETCRAFT_TAG"
+          tag_commit="$(git rev-parse "refs/tags/$FLEETCRAFT_TAG^{commit}")"
+          test "$event_commit" = "$tag_commit"
+          mkdir "$FLEETCRAFT_EXPECTED_DIR"
+          git archive "$event_commit:plugins/fleetcraft" | tar -x -C "$FLEETCRAFT_EXPECTED_DIR"
+          install_path=$(cat "$FLEETCRAFT_INSTALL_PATH_FILE")
+          test -d "$install_path"
+          diff -ru "$FLEETCRAFT_EXPECTED_DIR" "$install_path"

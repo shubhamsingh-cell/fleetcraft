@@ -1,0 +1,20 @@
+--- a/plugins/fleetcraft/hooks/fleet-delegation-guard.py
++++ b/plugins/fleetcraft/hooks/fleet-delegation-guard.py
+@@ -83,7 +83,7 @@
+             "--trailer", "--pathspec-from-file",
+         },
+         "push": {
+-            "-o", "--push-option", "--receive-pack",
++            "-o", "-u", "--push-option", "--set-upstream", "--receive-pack",
+             "--exec", "--repo",
+         },
+     }
+@@ -100,7 +100,7 @@
+         # cannot be an exact help/dry-run flag themselves.
+         if (
+             (action == "commit" and argument.startswith(("-m", "-F", "-C", "-c")) and len(argument) > 2)
+-            or (action == "push" and argument.startswith("-o") and len(argument) > 2)
++            or (action == "push" and argument.startswith(("-o", "-u")) and len(argument) > 2)
+             or any(argument.startswith(option + "=") for option in value_options[action] if option.startswith("--"))
+         ):
+             index += 1

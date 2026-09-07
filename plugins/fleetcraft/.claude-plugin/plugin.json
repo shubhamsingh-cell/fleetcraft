@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "fleetcraft",
+  "displayName": "Fleetcraft",
+  "version": "0.1.1",
+  "description": "Evidence-backed execution, verification, and model-routing controls for Claude Code.",
+  "author": {"name": "Shubham Singh Chandel"},
+  "homepage": "https://github.com/shubhamsingh-cell/fleetcraft",
+  "repository": "https://github.com/shubhamsingh-cell/fleetcraft",
+  "license": "MIT AND Apache-2.0",
+  "keywords": ["claude-code", "verification", "hooks", "agents"],
+  "userConfig": {
+    "delegation_mode": {
+      "type": "string",
+      "title": "Delegation guard mode",
+      "description": "audit adds a reminder; strict asks for confirmation before publish-shaped commands. Only audit and strict are supported; invalid values fail closed at runtime.",
+      "default": "audit"
+    },
+    "autoload_judgment": {
+      "type": "boolean",
+      "title": "Autoload judgment kernel",
+      "description": "Inject Fleetcraft's compact, bundled judgment kernel at session start.",
+      "default": true
+    },
+    "completion_gate": {
+      "type": "boolean",
+      "title": "Completion evidence gate",
+      "description": "When enabled, verified tasks require Evidence: and Validation: fields before closing.",
+      "default": false
+    },
+    "evidence_batch": {
+      "type": "boolean",
+      "title": "Batch evidence reminders",
+      "description": "When enabled, summarize each completed parallel tool batch for the next model request.",
+      "default": false
+    }
+  }
+}

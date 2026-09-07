@@ -1,0 +1,11 @@
+{
+  "description": "Fleetcraft evidence, routing, and release-safety hooks.",
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/autoload-judgment.py"]}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/skill-routing-guard.py"]}]}],
+    "PreToolUse": [{"matcher": "Bash|PowerShell", "hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/fleet-delegation-guard.py"]}]}],
+    "PostToolUse": [{"matcher": "Agent", "hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/agent-telemetry.py"]}]}],
+    "TaskCompleted": [{"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/completion-gate.py"]}]}],
+    "PostToolBatch": [{"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/evidence-batch.py"]}]}]
+  }
+}

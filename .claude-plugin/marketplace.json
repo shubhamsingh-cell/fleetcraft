@@ -1,0 +1,17 @@
+{
+  "name": "fleetcraft",
+  "owner": {
+    "name": "Shubham Singh Chandel"
+  },
+  "metadata": {
+    "description": "Evidence-first Claude Code skills, agents, and release-safety hooks.",
+    "version": "0.1.1"
+  },
+  "plugins": [
+    {
+      "name": "fleetcraft",
+      "source": "./plugins/fleetcraft",
+      "strict": true
+    }
+  ]
+}
