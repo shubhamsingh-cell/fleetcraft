@@ -112,4 +112,5 @@ jobs:
           test "$event_commit" = "$(git rev-parse "refs/tags/$FLEETCRAFT_TAG^{commit}")"
           expected="${RUNNER_TEMP}/fleetcraft-expected"; mkdir "$expected"
           git archive "$event_commit:plugins/fleetcraft" | tar -x -C "$expected"
+          if [ -d "$install_path/.in_use" ] && [ ! -L "$install_path/.in_use" ]; then rmdir "$install_path/.in_use"; fi
           diff -ru "$expected" "$install_path"

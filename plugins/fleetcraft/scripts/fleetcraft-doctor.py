@@ -13,6 +13,8 @@ except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
     fail("readable distribution inventory (" + str(exc) + ")"); inventory = {}
 actual_files = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and path.relative_to(root).as_posix() != "scripts/distribution-inventory.json"}
 actual_dirs = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_dir()}
+loader_dir = root / ".in_use"
+if loader_dir.is_dir() and not loader_dir.is_symlink() and not any(loader_dir.iterdir()): actual_dirs.discard(".in_use")
 expected_dirs = set()
 for rel in expected_files:
     parent = Path(rel).parent

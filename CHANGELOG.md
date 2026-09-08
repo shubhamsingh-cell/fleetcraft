@@ -5,20 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.3.0 integration candidate — unreleased
-
-- Preserves distinct manual-install backups across same-second reinstalls and replaces destination symlinks without writing through them.
-- Reconciles all eight hooks across the manual installer, example settings and plugin registry.
-- Removes duplicate PR CI runs, bounds validation time and refreshes contributor templates.
-
-- Reconciles v0.2 source workflows and the earlier plugin-hardening candidate.
-- Keeps one canonical source tree with a generated, parity-checked plugin.
-- Preserves eleven skills and four roles; adds explicit behavior-evaluation machinery.
-- Repairs retrieval evidence, optional routing, and unsafe performance instructions.
-- Adds source revision/license records, compatibility and reconciliation guidance.
-- Separates observed validation from unexecuted or incomplete release/behavior gates.
-
 ## [Unreleased]
+
+### Fixed
+
+- Accept only the pinned loader's empty regular top-level `.in_use` directory in installed-package checks; remove that empty metadata directory before the exact tag archive comparison.
+
+- Preserve distinct manual-install backups across same-second reinstalls and replace destination symlinks without writing through them.
+- Reconcile all eight hooks across the manual installer, example settings and plugin registry, including the delegation matcher.
 
 <!--
   Add new entries above this line, under the matching heading:
@@ -28,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [0.3.0] - 2026-09-08
+
+**Verification failed:** the immutable tag exists, but its [public-install CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245)
+failed when the doctor rejected an empty loader-created `.in_use` directory. The tag
+is preserved and is not a validated package release. Repairs belong to the unreleased follow-up.
 
 Packaging release. The canonical source tree now generates a self-contained
 Claude Code plugin, installable through the plugin marketplace, with a
@@ -95,9 +93,9 @@ alignment landed in #3.
 ### Known limitations (carried from #2, not resolved by this release)
 
 - The 24-run instructed-workflow smoke evaluation was **mixed**: failed and
-  OPEN cases are retained in `EVIDENCE.md`. This release verifies the
-  *package* — manifests, parity, isolated install, hook contracts — not that
-  the skills reliably activate on every prompt shape. Treat activation
+  OPEN cases are retained in `EVIDENCE.md`. Local checks covered manifests, parity, isolated fixture installation and hook
+  contracts; public-tag package verification failed as noted above. These checks do not
+  establish that skills reliably activate on every prompt shape. Treat activation
   evidence as author-reported until you reproduce it.
 - Offline OSV scanning has no npm advisory cache; some workflow checks are
   blocked on missing design/code artifacts.
