@@ -61,6 +61,16 @@
   nav a:hover { color: var(--accent); }
 
   .hero { padding: 72px 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; align-items: start; }
+  @media (min-width: 1100px) {
+    .wrap.hero { max-width: 1180px; }
+    .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; }
+    .hero-grid .proof { margin-top: 6px; }
+  }
+  .proof { margin: 0; }
+  .proof pre { margin: 0; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .proof figcaption { font-size: 14px; color: var(--ink-2); margin-top: 12px; line-height: 1.5; }
+  .proof figcaption .counts { display: block; color: var(--ink); font-weight: 600; margin-bottom: 4px; }
   .eyebrow {
     display: inline-block; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
@@ -140,30 +150,55 @@
 
 <main>
   <div class="wrap hero">
-    <span class="eyebrow">Claude Code plugin · MIT and Apache-2.0</span>
-    <h1>Evidence-first workflows for AI coding agents.</h1>
-    <p class="lede">
-      Focused skills, executor / researcher / verifier / strategist roles, optional runtime
-      guards, and repeatable checks for the work an agent is about to call complete.
-    </p>
-    <div class="actions">
-      <a class="btn primary" href="https://github.com/shubhamsingh-cell/fleetcraft">View the source on GitHub</a>
-      <a class="btn" href="#start">Run a local evaluation</a>
-    </div>
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Claude Code plugin · MIT and Apache-2.0</span>
+        <h1>Evidence-first workflows for AI coding agents.</h1>
+        <p class="lede">
+          Focused skills, executor / researcher / verifier / strategist roles, optional runtime
+          guards, and repeatable checks for the work an agent is about to call complete.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/shubhamsingh-cell/fleetcraft">View the source on GitHub</a>
+          <a class="btn" href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">Read the evidence record</a>
+        </div>
 
-    <div class="status">
-      <strong>0.3.0 integration candidate.</strong> A source commit, a passing test suite, and a
-      released plugin are different milestones. The newest commit on <code>main</code> is not a
-      validated published release; see
-      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">EVIDENCE.md</a>
-      for observed checks and their limitations.
-    </div>
+        <div class="status">
+          <strong>Version 0.3.0.</strong> A source commit, a passing test suite, and a tagged
+          package are different milestones: a <code>v*</code> tag is only a release once CI's tag
+          job has installed the public package at that tag and diffed it against the tagged
+          source. <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+          records what each version verified;
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">EVIDENCE.md</a>
+          records observed checks and their limitations.
+        </div>
+      </div>
 
-    <div class="facts" aria-label="What ships in the source tree">
-      <div class="fact"><b>11</b><span>skills</span></div>
-      <div class="fact"><b>4</b><span>agent roles</span></div>
-      <div class="fact"><b>8</b><span>runtime hooks, opt-in</span></div>
-      <div class="fact"><b>1</b><span>generated, parity-checked plugin</span></div>
+      <figure class="proof">
+<pre><code><span class="c">$ python3 scripts/validate.py</span>
+== skills/*/SKILL.md ==
+== agents/*.md ==
+== hooks/*.py ==
+  ok    hooks/autoload-judgment.py (compiles, exits 0 on empty payload)
+  ok    hooks/fleet-delegation-guard.py (compiles, exits 0 on empty payload)
+  ok    hooks/retrieval-honesty-guard.py (compiles, exits 0 on empty payload)
+  <span class="c">… 5 more hook lines</span>
+== repo-wide: no absolute local paths, no wikilinks ==
+validate.py: OK — 25 checks passed, 0 warning(s)
+
+<span class="c">$ python3 -m pytest tests/ -q</span>
+108 passed in 18.76s</code></pre>
+        <figcaption>
+          <span class="counts">11 skills · 4 agent roles · 8 runtime hooks · 1 generated, parity-checked plugin</span>
+          Verbatim output, abridged where marked, at
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/tree/v0.3.0">v0.3.0</a>
+          (<a href="https://github.com/shubhamsingh-cell/fleetcraft/commit/ad7913d">ad7913d</a>),
+          2026-09-08, macOS, Python 3.9. Later commits on <code>main</code> may differ. The same
+          two commands are in the quickstart below; run them yourself. Most hook effects are
+          configurable; three reminder hooks always run, and the judgment autoload and
+          audit-mode delegation reminders are on by default.
+        </figcaption>
+      </figure>
     </div>
   </div>
 
