@@ -127,6 +127,18 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertNotEqual(nonempty.returncode, 0)
             with self.assertRaisesRegex(RuntimeError, "unexpected top-level entries"):
                 smoke.inspect_install_package(plugin)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO support is required")
+    def test_doctor_rejects_a_top_level_fifo_without_reading_it(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("clean_install_smoke", ROOT / "scripts" / "clean_install_smoke.py")
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
+        with tempfile.TemporaryDirectory() as tmp:
+            plugin = Path(tmp) / "fleetcraft"; self.assertEqual(self.build(plugin).returncode, 0)
+            os.mkfifo(plugin / ".in_use")
+            result = subprocess.run([sys.executable, "-B", plugin / "scripts" / "fleetcraft-doctor.py"], text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unsupported filesystem entry .in_use", result.stdout)
         with tempfile.TemporaryDirectory() as tmp:
             plugin = Path(tmp) / "fleetcraft"; self.assertEqual(self.build(plugin).returncode, 0)
             marker = plugin / ".in_use"

@@ -12,8 +12,9 @@ def inventory(root: Path) -> tuple[dict[str, tuple[bytes, int]], set[str]]:
     for path in root.rglob("*"):
         rel = path.relative_to(root).as_posix()
         if path.is_symlink(): raise ValueError("symlink in plugin tree: " + rel)
-        if path.is_dir(): directories.add(rel)
-        if path.is_file(): files[rel] = (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
+        elif path.is_dir(): directories.add(rel)
+        elif path.is_file(): files[rel] = (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
+        else: raise ValueError("unsupported filesystem entry: " + rel)
     return files, directories
 
 def main() -> int:

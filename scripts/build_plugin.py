@@ -171,7 +171,9 @@ for rel in expected_files:
         expected_dirs.add(parent.as_posix())
         parent = parent.parent
 for path in root.rglob("*"):
-    if path.is_symlink(): fail("symlink " + path.relative_to(root).as_posix())
+    rel = path.relative_to(root).as_posix()
+    if path.is_symlink(): fail("symlink " + rel)
+    elif not path.is_file() and not path.is_dir(): fail("unsupported filesystem entry " + rel)
 if set(inventory) != expected_files: fail("inventory path set")
 if actual_files != expected_files: fail("unexpected or missing files")
 if actual_dirs != expected_dirs: fail("unexpected or missing directories")

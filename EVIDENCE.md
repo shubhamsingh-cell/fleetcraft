@@ -6,7 +6,7 @@ help select references; they do not establish quality.
 
 | Check | Observed result | Limit |
 |---|---|---|
-| Standard-library test suite | 115 tests passed on macOS/Python 3.9.6 after installer and loader follow-ups | Local fixtures, not production behavior |
+| Standard-library test suite | 117 tests passed on macOS/Python 3.9.6 after installer and loader follow-ups | Local fixtures, not production behavior |
 | Source/plugin parity | Passed deterministic byte, mode and directory comparison | Re-run after every source change |
 | Claude manifests | Marketplace and plugin strict validation passed | Schema validity alone is insufficient |
 | Isolated clean install | Installed sparse 0.3.0 payload, doctor and package checks passed | Local marketplace fixture, not a public immutable release |
@@ -23,11 +23,11 @@ A fresh audit reproduced two manual-install recovery defects: same-second backup
 collisions and writes through dangling destination symlinks. The repair allocates unused
 backup suffixes and backs up destination symlinks before copying regular files/directories.
 It also aligns the printed delegation matcher and all eight example hooks with the plugin
-registry. The installer repair leaves hook and skill payloads unchanged. A separate doctor repair narrowly accepts the pinned CLI's empty, non-symlink top-level `.in_use` loader directory; nonempty markers, symlinks and unrelated extras remain failures.
+registry. The installer repair leaves hook and skill payloads unchanged. A separate doctor repair narrowly accepts the pinned CLI's empty, non-symlink top-level `.in_use` loader directory; nonempty markers, symlinks, unsupported filesystem nodes and unrelated extras remain failures. FIFO regressions verify that neither the doctor nor parity checker silently skips special nodes.
 
 The ten installer tests failed six cases against `1210846` (whose installer is unchanged
 from `09bc9af`) and passed all ten after repair. Separate directory cases ensure the first
-file failure cannot hide directory behavior. The full local suite passed 115 tests; parity
+file failure cannot hide directory behavior. The full local suite passed 117 tests; parity
 and source validation passed. This verifies serial backup collisions and destination-leaf
 symlinks, not concurrent installations or arbitrary parent-directory link confinement.
 
