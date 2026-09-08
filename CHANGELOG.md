@@ -81,7 +81,7 @@ was also brought up to date with the private setup it was extracted from.
   ceiling, so "wait for completion" asks for something the tool contract
   cannot deliver); an adversarial file-tree step in the vendor-vet gate
   (read a skill bundle as files before reading it as prose — hidden-unicode
-  channels survive a prose read); and the six-hook enforcement family.
+  channels survive a prose read); and the five-hook enforcement family.
 - **`skills/design-judge/`** — an observed-vs-inferred rule (a screenshot is
   evidence of exactly one viewport, theme, state and moment; a still frame
   cannot establish motion), and a render-package contract for panel dispatch
