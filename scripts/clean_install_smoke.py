@@ -26,7 +26,9 @@ def run(command: list[str], *, env: dict[str, str], cwd: Path, input_text: str |
 
 
 def inspect_install_package(install_path: Path) -> tuple[list[str], int]:
-    top_level = {path.name for path in install_path.iterdir()}
+    loader_dir = install_path / ".in_use"
+    empty_regular_loader_dir = loader_dir.is_dir() and not loader_dir.is_symlink() and not any(loader_dir.iterdir())
+    top_level = {path.name for path in install_path.iterdir() if not (path.name == ".in_use" and empty_regular_loader_dir)}
     unexpected = sorted(top_level - ALLOWED_TOP_LEVEL)
     if unexpected:
         raise RuntimeError(f"plugin cache has unexpected top-level entries: {', '.join(unexpected)}")

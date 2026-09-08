@@ -14,16 +14,7 @@ skill-activation evaluation this version does not claim to have resolved.
 
 ## Install
 
-From the Claude Code plugin marketplace (pin a tag; `main` is a source tree, not a release):
-
-```
-/plugin marketplace add shubhamsingh-cell/fleetcraft@v0.3.0
-/plugin install fleetcraft@fleetcraft
-```
-
-Then `/fleetcraft:doctor` in a new session to confirm the installed package is intact.
-Read [SECURITY.md](SECURITY.md) first — the hooks run in your shell on every matching
-event, and two of them can block.
+The existing `v0.3.0` tag has a [failed public-install verification](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245): the pinned Claude CLI adds an empty loader directory that the package doctor rejects. Installation success alone does not establish package readiness. The original tag is preserved; use the source evaluation path below while follow-up repairs are verified.
 
 ## Evaluate from source instead
 

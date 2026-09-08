@@ -162,6 +162,8 @@ except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
     fail("readable distribution inventory (" + str(exc) + ")"); inventory = {}
 actual_files = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file() and path.relative_to(root).as_posix() != "scripts/distribution-inventory.json"}
 actual_dirs = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_dir()}
+loader_dir = root / ".in_use"
+if loader_dir.is_dir() and not loader_dir.is_symlink() and not any(loader_dir.iterdir()): actual_dirs.discard(".in_use")
 expected_dirs = set()
 for rel in expected_files:
     parent = Path(rel).parent
@@ -169,7 +171,9 @@ for rel in expected_files:
         expected_dirs.add(parent.as_posix())
         parent = parent.parent
 for path in root.rglob("*"):
-    if path.is_symlink(): fail("symlink " + path.relative_to(root).as_posix())
+    rel = path.relative_to(root).as_posix()
+    if path.is_symlink(): fail("symlink " + rel)
+    elif not path.is_file() and not path.is_dir(): fail("unsupported filesystem entry " + rel)
 if set(inventory) != expected_files: fail("inventory path set")
 if actual_files != expected_files: fail("unexpected or missing files")
 if actual_dirs != expected_dirs: fail("unexpected or missing directories")

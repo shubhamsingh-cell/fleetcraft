@@ -101,17 +101,33 @@ print(json.dumps("python3 -B " + shlex.quote(sys.argv[1])))
 PY
 }
 
+# backup_path DEST — print a non-existing backup path for this serial install.
+# Check both normal paths and dangling symlinks. The suffix prevents a
+# same-second reinstallation from overwriting an earlier backup; it is not a
+# concurrency lock.
+backup_path() {
+  local dest candidate suffix
+  dest="$1"
+  candidate="${dest}.bak.${TS}"
+  suffix=0
+  while [ -e "$candidate" ] || [ -L "$candidate" ]; do
+    suffix=$((suffix + 1))
+    candidate="${dest}.bak.${TS}.${suffix}"
+  done
+  printf '%s' "$candidate"
+}
+
 # install_file SRC DEST — copy a single file into place, backing up an
 # existing, differing DEST first. Never overwrites an identical DEST.
 install_file() {
   local src dest bak
   src="$1"; dest="$2"
-  if [ -e "$dest" ]; then
-    if cmp -s -- "$src" "$dest"; then
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ ! -L "$dest" ] && cmp -s -- "$src" "$dest"; then
       SKIPPED+=("$dest  (already up to date)")
       return
     fi
-    bak="${dest}.bak.${TS}"
+    bak="$(backup_path "$dest")"
     if [ "$DRY_RUN" -eq 1 ]; then
       log_dry "back up existing $dest -> $bak"
       log_dry "write $dest  (from ${src#"$REPO_ROOT"/})"
@@ -138,12 +154,12 @@ install_file() {
 install_dir() {
   local src dest bak
   src="$1"; dest="$2"
-  if [ -e "$dest" ]; then
-    if diff -rq -- "$src" "$dest" >/dev/null 2>&1; then
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ ! -L "$dest" ] && diff -rq -- "$src" "$dest" >/dev/null 2>&1; then
       SKIPPED+=("$dest  (already up to date)")
       return
     fi
-    bak="${dest}.bak.${TS}"
+    bak="$(backup_path "$dest")"
     if [ "$DRY_RUN" -eq 1 ]; then
       log_dry "back up existing $dest -> $bak"
       log_dry "install $dest  (from ${src#"$REPO_ROOT"/}/)"
@@ -296,6 +312,7 @@ if [ "$DO_HOOKS" -eq 1 ] && [ "${#HOOK_FILES[@]}" -gt 0 ]; then
       evidence-batch.py) HOOK_EVENT="PostToolBatch"; return ;;
       agent-telemetry.py) HOOK_EVENT="PostToolUse"; HOOK_MATCHER="Agent"; return ;;
       completion-gate.py) HOOK_EVENT="TaskCompleted"; return ;;
+      fleet-delegation-guard.py) HOOK_EVENT="PreToolUse"; HOOK_MATCHER="Bash|PowerShell"; return ;;
     esac
 
     paren="$(grep -m1 -oE '\((SessionStart|PreToolUse|PostToolUse|UserPromptSubmit|SubagentStart|SubagentStop|PreCompact|Notification|Stop)[^)]*\)' -- "$f" 2>/dev/null || true)"

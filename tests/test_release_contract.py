@@ -110,6 +110,46 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertNotEqual(extra.returncode, 0)
             self.assertIn("unexpected or missing files", extra.stdout)
 
+    def test_doctor_and_clean_install_allow_only_an_empty_regular_in_use_directory(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("clean_install_smoke", ROOT / "scripts" / "clean_install_smoke.py")
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
+        with tempfile.TemporaryDirectory() as tmp:
+            plugin = Path(tmp) / "fleetcraft"; self.assertEqual(self.build(plugin).returncode, 0)
+            doctor = plugin / "scripts" / "fleetcraft-doctor.py"
+            marker = plugin / ".in_use"
+            marker.mkdir()
+            allowed = subprocess.run([sys.executable, "-B", doctor], text=True, capture_output=True)
+            self.assertEqual(allowed.returncode, 0, allowed.stdout + allowed.stderr)
+            self.assertIsInstance(smoke.inspect_install_package(plugin), tuple)
+            (marker / "nested").write_text("not empty", encoding="utf-8")
+            nonempty = subprocess.run([sys.executable, "-B", doctor], text=True, capture_output=True)
+            self.assertNotEqual(nonempty.returncode, 0)
+            with self.assertRaisesRegex(RuntimeError, "unexpected top-level entries"):
+                smoke.inspect_install_package(plugin)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO support is required")
+    def test_doctor_rejects_a_top_level_fifo_without_reading_it(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("clean_install_smoke", ROOT / "scripts" / "clean_install_smoke.py")
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
+        with tempfile.TemporaryDirectory() as tmp:
+            plugin = Path(tmp) / "fleetcraft"; self.assertEqual(self.build(plugin).returncode, 0)
+            os.mkfifo(plugin / ".in_use")
+            result = subprocess.run([sys.executable, "-B", plugin / "scripts" / "fleetcraft-doctor.py"], text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unsupported filesystem entry .in_use", result.stdout)
+        with tempfile.TemporaryDirectory() as tmp:
+            plugin = Path(tmp) / "fleetcraft"; self.assertEqual(self.build(plugin).returncode, 0)
+            marker = plugin / ".in_use"
+            outside = Path(tmp) / "outside"; outside.mkdir()
+            marker.symlink_to(outside, target_is_directory=True)
+            rejected = subprocess.run([sys.executable, "-B", plugin / "scripts" / "fleetcraft-doctor.py"], text=True, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("symlink .in_use", rejected.stdout)
+            with self.assertRaisesRegex(RuntimeError, "unexpected top-level entries"):
+                smoke.inspect_install_package(plugin)
+
     def test_generated_manifest_wires_opt_in_runtime_hooks(self):
         manifest = json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
         hooks = json.loads((PLUGIN / "hooks" / "hooks.json").read_text(encoding="utf-8"))["hooks"]
@@ -176,6 +216,7 @@ class ReleaseContractTests(unittest.TestCase):
         text = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn('claude plugin marketplace add "shubhamsingh-cell/fleetcraft@$FLEETCRAFT_TAG"', text)
         self.assertIn('git archive "$event_commit:plugins/fleetcraft"', text)
+        self.assertIn('rmdir "$install_path/.in_use"', text)
         self.assertIn('diff -ru "$expected" "$install_path"', text)
         self.assertGreaterEqual(text.count('refs/tags/$FLEETCRAFT_TAG:refs/tags/$FLEETCRAFT_TAG'), 2)
         self.assertIn('test "$(node --version)" = "v22.22.1"', text)

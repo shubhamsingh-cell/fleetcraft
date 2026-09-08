@@ -32,4 +32,17 @@ class PluginParityTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("extra_dirs=skills 2,skills 2/duplicate", result.stderr)
 
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO support is required")
+    def test_checker_rejects_special_filesystem_entries_without_reading_them(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "fleetcraft"; shutil.copytree(ROOT / "plugins" / "fleetcraft", candidate)
+            os.mkfifo(candidate / ".in_use")
+            result = subprocess.run(
+                [sys.executable, "scripts/check_plugin_parity.py"], cwd=ROOT,
+                env={**os.environ, "FLEETCRAFT_PLUGIN_PARITY_PLUGIN": str(candidate)},
+                text=True, capture_output=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unsupported filesystem entry: .in_use", result.stderr)
+
 if __name__ == "__main__": unittest.main()
