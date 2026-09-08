@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleetcraft</title>
+<meta name="description" content="Evidence-first workflows for AI coding agents: skills, executor/researcher/verifier/strategist roles, optional runtime guards, and repeatable checks.">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --bg-2: #f1efe9;
+    --ink: #1c1b18;
+    --ink-2: #5b5852;
+    --line: #dcd8cf;
+    --accent: #2b5d9c;
+    --accent-ink: #ffffff;
+    --code-bg: #1c1b18;
+    --code-ink: #efece4;
+    --ok: #2e7d4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --bg-2: #1d1d1b;
+      --ink: #ebe8e0;
+      --ink-2: #a39f95;
+      --line: #2d2d2a;
+      --accent: #8ab4ec;
+      --accent-ink: #0f1a2a;
+      --code-bg: #0b0b0a;
+      --code-ink: #e6e2d8;
+      --ok: #7fcf9c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  code, pre, .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.92em;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover, a:focus-visible { text-decoration: underline; }
+  a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  header.top {
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  header.top .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { font-weight: 650; letter-spacing: -0.01em; color: var(--ink); }
+  nav a { margin-left: 20px; color: var(--ink-2); font-size: 15px; }
+  nav a:hover { color: var(--accent); }
+
+  .hero { padding: 72px 0 40px; }
+  .eyebrow {
+    display: inline-block; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+  }
+  h1 {
+    font-size: clamp(34px, 5.5vw, 52px); line-height: 1.08; letter-spacing: -0.025em;
+    margin: 18px 0 16px; max-width: 18ch;
+  }
+  .lede { font-size: 19px; color: var(--ink-2); max-width: 60ch; margin: 0 0 28px; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-block; padding: 10px 16px; border-radius: 8px; font-weight: 600;
+    border: 1px solid var(--line); color: var(--ink); background: var(--bg-2);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn:hover { text-decoration: none; filter: brightness(1.04); }
+
+  .status {
+    margin-top: 32px; padding: 14px 16px; border-left: 3px solid var(--accent);
+    background: var(--bg-2); border-radius: 0 8px 8px 0; font-size: 15px; color: var(--ink-2);
+  }
+  .status strong { color: var(--ink); }
+
+  section { padding: 40px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 24px; letter-spacing: -0.015em; margin: 0 0 14px; }
+  p { max-width: 68ch; }
+
+  pre {
+    background: var(--code-bg); color: var(--code-ink); padding: 18px 20px; border-radius: 10px;
+    overflow-x: auto; margin: 16px 0; line-height: 1.5;
+  }
+  pre .c { opacity: 0.55; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 24px 0 0; }
+  .fact { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--bg-2); }
+  .fact b { display: block; font-size: 26px; letter-spacing: -0.02em; line-height: 1.1; }
+  .fact span { color: var(--ink-2); font-size: 14px; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--bg-2); font-weight: 600; color: var(--ink-2); font-size: 13px; letter-spacing: 0.03em; text-transform: uppercase; }
+  tr:last-child td { border-bottom: 0; }
+  td code { background: var(--bg-2); padding: 2px 6px; border-radius: 5px; white-space: nowrap; }
+
+  ul.rules { padding-left: 0; list-style: none; margin: 16px 0 0; }
+  ul.rules li { position: relative; padding-left: 26px; margin: 0 0 12px; max-width: 70ch; }
+  ul.rules li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 12px; height: 12px; border-radius: 3px; background: var(--ok); }
+
+  .note { color: var(--ink-2); font-size: 15px; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 48px; color: var(--ink-2); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--ink-2); margin-right: 16px; }
+  footer a:hover { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .hero { padding: 48px 0 32px; }
+    nav a { margin-left: 14px; }
+    .facts { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#">Fleetcraft</a>
+    <nav aria-label="Primary">
+      <a href="#start">Start</a>
+      <a href="#workflows">Workflows</a>
+      <a href="#checks">Checks</a>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <span class="eyebrow">Claude Code plugin · MIT and Apache-2.0</span>
+    <h1>Evidence-first workflows for AI coding agents.</h1>
+    <p class="lede">
+      Focused skills, executor / researcher / verifier / strategist roles, optional runtime
+      guards, and repeatable checks for the work an agent is about to call complete.
+    </p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/shubhamsingh-cell/fleetcraft">View the source on GitHub</a>
+      <a class="btn" href="#start">Run a local evaluation</a>
+    </div>
+
+    <div class="status">
+      <strong>0.3.0 integration candidate.</strong> A source commit, a passing test suite, and a
+      released plugin are different milestones. The newest commit on <code>main</code> is not a
+      validated published release; see
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">EVIDENCE.md</a>
+      for observed checks and their limitations.
+    </div>
+
+    <div class="facts" aria-label="What ships in the source tree">
+      <div class="fact"><b>11</b><span>skills</span></div>
+      <div class="fact"><b>4</b><span>agent roles</span></div>
+      <div class="fact"><b>8</b><span>runtime hooks, opt-in</span></div>
+      <div class="fact"><b>1</b><span>generated, parity-checked plugin</span></div>
+    </div>
+  </div>
+
+  <section id="start">
+    <div class="wrap">
+      <h2>Start with a local evaluation</h2>
+      <p>
+        Python 3.9+ and the Claude Code CLI are needed for the package checks. The core skills
+        can also be read as plain Markdown. Inspect
+        <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/SECURITY.md">SECURITY.md</a>
+        before enabling hooks.
+      </p>
+<pre><code>git clone https://github.com/shubhamsingh-cell/fleetcraft.git
+cd fleetcraft
+python3 scripts/build_plugin.py
+python3 scripts/check_plugin_parity.py
+python3 -m unittest discover -v
+claude --plugin-dir plugins/fleetcraft   <span class="c"># then run /fleetcraft:doctor</span></code></pre>
+      <p class="note">
+        A local <code>--plugin-dir</code> session is the candidate evaluation path. The legacy
+        installer is still available for source-layout users
+        (<code>bash scripts/install.sh --dry-run</code>); it preserves existing configuration and
+        reports its destinations. Avoid loading the manual and plugin copies together.
+      </p>
+    </div>
+  </section>
+
+  <section id="workflows">
+    <div class="wrap">
+      <h2>Choose the workflow that fits</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Need</th><th>Skill</th></tr></thead>
+          <tbody>
+            <tr><td>Plan a consequential change, with acceptance and recovery</td><td><code>change-plan</code></td></tr>
+            <tr><td>Coordinate implementation and independent review</td><td><code>fleet-orchestrator</code></td></tr>
+            <tr><td>Diagnose a reproducible failure</td><td><code>debugging-and-error-recovery</code></td></tr>
+            <tr><td>Improve measured performance without sacrificing correctness</td><td><code>performance-diagnosis</code></td></tr>
+            <tr><td>Build or refine an application interface</td><td><code>product-interface-craft</code></td></tr>
+            <tr><td>Build or refine an acquisition journey</td><td><code>growth-web-architect</code></td></tr>
+            <tr><td>Implement a supplied visual reference</td><td><code>image-to-code</code></td></tr>
+            <tr><td>Judge an actual rendered result</td><td><code>design-judge</code></td></tr>
+            <tr><td>Preserve decisions, evidence and open gates for continuation</td><td><code>project-handoff</code></td></tr>
+            <tr><td>Propose a durable lesson from a resolved incident</td><td><code>incident-miner</code></td></tr>
+            <tr><td>Check the installed package</td><td><code>doctor</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:14px">
+        Plugin commands use the <code>fleetcraft:</code> namespace. The four agent roles separate
+        execution, source gathering, independent acceptance, and escalated strategy judgment.
+        Model aliases come from the adopter's environment; a model's prose identity is not runtime
+        evidence.
+      </p>
+    </div>
+  </section>
+
+  <section id="checks">
+    <div class="wrap">
+      <h2>What makes the checks useful</h2>
+      <ul class="rules">
+        <li>A task has an explicit scope, owner, base revision and acceptance evidence.</li>
+        <li>A regression test must fail against the broken behavior before its passing result counts.</li>
+        <li>Specification compliance and build quality receive separate verdicts.</li>
+        <li>A failed, missing or timed-out check stays OPEN; it cannot silently become PASS.</li>
+        <li>Visual proof requires an actual render. Testimonials, statistics and logos need real sources.</li>
+        <li>Existing authorization is carried forward; a new tool or skill does not expand it.</li>
+        <li>Provider integrations are detected before use. Fleetcraft does not install service clients or configure credentials merely because a workflow mentions them.</li>
+      </ul>
+      <p class="note">
+        These are protocol rules. Only the documented runtime decision or CI check is technical
+        enforcement; instructions alone do not guarantee model compliance.
+      </p>
+    </div>
+  </section>
+
+  <section id="source">
+    <div class="wrap">
+      <h2>One source tree, one generated plugin</h2>
+      <p>
+        Author <code>skills/</code>, <code>agents/</code>, <code>hooks/</code> and their support
+        files. The sparse <code>plugins/fleetcraft/</code> distribution is generated by
+        <code>scripts/build_plugin.py</code>; <code>scripts/check_plugin_parity.py</code> rejects
+        stale generated content. This keeps a reviewable source layout while making the plugin
+        self-contained.
+      </p>
+      <p>
+        The <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/evals/README.md">evaluation harness</a>
+        separates corpus validation, observed skill selection, and behavioral expectations. We make
+        no unsupported claim about superiority, token savings, general routing reliability, or
+        output-quality uplift. Results describe the cases and environment actually measured.
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft">Source</a>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/THIRD_PARTY_NOTICES.md">Notices</a>
+    </div>
+    <div>Original contributions MIT; adapted material retains its terms.</div>
+  </div>
+</footer>
+
+</body>
+</html>

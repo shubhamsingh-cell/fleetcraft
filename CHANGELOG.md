@@ -23,6 +23,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and start a fresh empty `## [Unreleased]` above it.
 -->
 
+## [0.3.0] - 2026-09-08
+
+Packaging release. The canonical source tree now generates a self-contained
+Claude Code plugin, installable through the plugin marketplace, with a
+parity check that fails the build if the generated copy drifts from source
+and a tag-to-package version contract enforced in CI on every `v*` tag.
+
+Integration of two independently advanced lines: the v0.2.0 content sync and
+the plugin-hardening work first proposed in #1, reconciled in #2 without
+overwriting either history. CI de-duplication and contribution-template
+alignment landed in #3.
+
+### Added
+
+- **Plugin packaging** — `.claude-plugin/marketplace.json` at the root and
+  `plugins/fleetcraft/` (manifest, `hooks/hooks.json` using
+  `${CLAUDE_PLUGIN_ROOT}`, bundled `judgment-kernel.md` so session-start
+  injection works without any private skill). Install with
+  `/plugin marketplace add shubhamsingh-cell/fleetcraft@v0.3.0` then
+  `/plugin install fleetcraft@fleetcraft`. `scripts/install.sh` remains the
+  manual fallback.
+- **`scripts/build_plugin.py`** + **`scripts/check_plugin_parity.py`** — the
+  root tree is the only thing you edit; the plugin is regenerated and
+  parity-checked in CI. Never fix the generated copy.
+- **`scripts/check_release_version.py`** and a CI tag job — a `v*` tag must
+  match the version in `plugin.json`, `marketplace.json` and
+  `pyproject.toml`, and the job installs the *public* package at that tag in
+  an isolated config dir, runs the doctor, exercises strict delegation mode,
+  and diffs the installed tree against `git archive` of the tagged commit.
+- **`scripts/fleetcraft-doctor.py`** and the `doctor` skill — installed-package
+  integrity diagnostics.
+- **`hooks/completion-gate.py`** (`TaskCompleted`, opt-in) — a task cannot be
+  closed without `Evidence:` and `Validation:` fields; **`hooks/agent-telemetry.py`**
+  (`PostToolUse`/`Agent`) and **`hooks/evidence-batch.py`** (`PostToolBatch`,
+  opt-in); shared **`hooks/fleet_hook_utils.py`**.
+- **Plugin `userConfig`** — `delegation_mode` (`audit` reminds; `strict` asks
+  before publish-shaped commands), `autoload_judgment`, `completion_gate`,
+  `evidence_batch`.
+- **`skills/image-to-code/`**, **`evals/`** (skill-routing fixtures and
+  `scripts/evaluate_skills.py`), `COMPATIBILITY.md`, `EVIDENCE.md`,
+  `THIRD_PARTY_NOTICES.md`, `docs/RECONCILIATION.md`, `docs/SOURCE_LEDGER.json`.
+- Tests: `test_release_contract`, `test_plugin_parity`, `test_portable_source`,
+  `test_manual_installer`, `test_eval_runner`, `test_strict_parser_regressions`
+  alongside the existing hook suite — 108 standard-library tests.
+
+### Changed
+
+- `CONTRIBUTING.md` and the issue/PR templates now ask for grounded evidence
+  or a clearly labelled proposal and forbid inventing dates or metrics to
+  satisfy a template — the same honesty rule as before, stated so it cannot
+  pressure a contributor into fabricating a precedent.
+- CI: single workflow, `concurrency` group with cancel-in-progress on
+  branches (never on tags), 15-minute job timeout, runs on `main`, `v*` tags
+  and pull requests.
+- `LICENSE` expression is `MIT AND Apache-2.0` where adapted material carries
+  Apache-2.0 notices — see `THIRD_PARTY_NOTICES.md` for each pinned source.
+
+### Fixed
+
+- Strict shell-parsing regressions in the delegation guard (reproducer
+  retained in `scripts/reproduce_strict_parser_regressions.py` with
+  before/after artifacts), installer command quoting, and `settings.json`
+  preservation in the manual installer.
+- Changelog entry for 0.2.0 counted six hooks; five shipped.
+
+### Known limitations (carried from #2, not resolved by this release)
+
+- The 24-run instructed-workflow smoke evaluation was **mixed**: failed and
+  OPEN cases are retained in `EVIDENCE.md`. This release verifies the
+  *package* — manifests, parity, isolated install, hook contracts — not that
+  the skills reliably activate on every prompt shape. Treat activation
+  evidence as author-reported until you reproduce it.
+- Offline OSV scanning has no npm advisory cache; some workflow checks are
+  blocked on missing design/code artifacts.
+
 ## [0.2.0] - 2026-09-08
 
 Second release. Four new skills, a fourth agent contract, two new hooks, and the
@@ -172,6 +247,7 @@ Initial public release.
   document/share/design/exec-message prompts to the matching installed
   skill instead of an ad hoc answer.
 
-[Unreleased]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/shubhamsingh-cell/fleetcraft/releases/tag/v0.1.0

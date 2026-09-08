@@ -4,11 +4,28 @@
 skills, executor/researcher/verifier/strategist roles, optional runtime guards, and
 repeatable checks for the work an agent is about to call complete.
 
-**0.3.0 integration candidate.** This combines the v0.2 source workflows with the earlier
-plugin-hardening work. A source commit, a passing test suite, and a released plugin are
-different milestones. See [EVIDENCE.md](EVIDENCE.md) for observed checks and limitations.
+**Version 0.3.0.** This combines the v0.2 source workflows with the earlier
+plugin-hardening work. A source commit, a passing test suite, and a tagged package are
+different milestones: a `v*` tag is only a release once CI's tag job has installed the
+*public* package at that tag in an isolated config dir and diffed it against the tagged
+source. See [CHANGELOG.md](CHANGELOG.md) for what each version verified and
+[EVIDENCE.md](EVIDENCE.md) for observed checks and limitations — including the mixed
+skill-activation evaluation this version does not claim to have resolved.
 
-## Start with a local evaluation
+## Install
+
+From the Claude Code plugin marketplace (pin a tag; `main` is a source tree, not a release):
+
+```
+/plugin marketplace add shubhamsingh-cell/fleetcraft@v0.3.0
+/plugin install fleetcraft@fleetcraft
+```
+
+Then `/fleetcraft:doctor` in a new session to confirm the installed package is intact.
+Read [SECURITY.md](SECURITY.md) first — the hooks run in your shell on every matching
+event, and two of them can block.
+
+## Evaluate from source instead
 
 Python 3.9+ and the Claude Code CLI are needed for the package checks. The core skills
 can also be read as plain Markdown. Inspect [SECURITY.md](SECURITY.md) before enabling hooks.
@@ -22,9 +39,9 @@ python3 -m unittest discover -v
 claude --plugin-dir plugins/fleetcraft
 ```
 
-Run `/fleetcraft:doctor` in that session. A local `--plugin-dir` session is the candidate
-evaluation path. Do not invent a release tag or assume the newest source commit is a
-validated published release.
+Run `/fleetcraft:doctor` in that session. A local `--plugin-dir` session evaluates the
+source tree as it is now; it is not the same thing as the tagged package the marketplace
+serves.
 
 The legacy installer remains available for existing source-layout users:
 `bash scripts/install.sh --dry-run`. It must preserve existing configuration and report
