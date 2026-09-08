@@ -27,7 +27,7 @@ registry. The installer repair leaves hook and skill payloads unchanged. A separ
 
 The ten installer tests failed six cases against `1210846` (whose installer is unchanged
 from `09bc9af`) and passed all ten after repair. Separate directory cases ensure the first
-file failure cannot hide directory behavior. The full local suite passed 114 tests; parity
+file failure cannot hide directory behavior. The full local suite passed 115 tests; parity
 and source validation passed. This verifies serial backup collisions and destination-leaf
 symlinks, not concurrent installations or arbitrary parent-directory link confinement.
 
