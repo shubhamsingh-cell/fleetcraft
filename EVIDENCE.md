@@ -6,7 +6,7 @@ help select references; they do not establish quality.
 
 | Check | Observed result | Limit |
 |---|---|---|
-| Standard-library test suite | 108 tests passed on macOS/Python 3.9.6 | Local fixtures, not production behavior |
+| Standard-library test suite | 114 tests passed on macOS/Python 3.9.6 after installer follow-up | Local fixtures, not production behavior |
 | Source/plugin parity | Passed deterministic byte, mode and directory comparison | Re-run after every source change |
 | Claude manifests | Marketplace and plugin strict validation passed | Schema validity alone is insufficient |
 | Isolated clean install | Installed sparse 0.3.0 payload, doctor and package checks passed | Local marketplace fixture, not a public immutable release |
@@ -16,6 +16,20 @@ help select references; they do not establish quality.
 | Dependency advisory audit | OPEN: offline OSV npm database unavailable | No clean vulnerability verdict |
 | Linux CI | Python 3.9/3.11/3.13 passed on `4c3b7df8e6df983828518d2530db5ef809e13d69` | [Exact integration CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34161918923); later code needs fresh CI |
 | Public immutable tag install | Not run for 0.3.0; tag-only job skipped as expected | No stable release tag was cut |
+
+## Installer follow-up
+
+A fresh audit reproduced two manual-install recovery defects: same-second backup-name
+collisions and writes through dangling destination symlinks. The repair allocates unused
+backup suffixes and backs up destination symlinks before copying regular files/directories.
+It also aligns the printed delegation matcher and all eight example hooks with the plugin
+registry. Existing source/plugin runtime payloads are unchanged.
+
+The ten installer tests failed six cases against `1210846` (whose installer is unchanged
+from `09bc9af`) and passed all ten after repair. Separate directory cases ensure the first
+file failure cannot hide directory behavior. The full local suite passed 114 tests; parity
+and source validation passed. This verifies serial backup collisions and destination-leaf
+symlinks, not concurrent installations or arbitrary parent-directory link confinement.
 
 ## Live workflow smoke: mixed, behavioral gate OPEN
 

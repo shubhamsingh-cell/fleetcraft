@@ -1,4 +1,10 @@
 {
+  "env": {
+    "CLAUDE_PLUGIN_OPTION_COMPLETION_GATE": "false",
+    "CLAUDE_PLUGIN_OPTION_DELEGATION_MODE": "audit",
+    "CLAUDE_PLUGIN_OPTION_EVIDENCE_BATCH": "false",
+    "CLAUDE_PLUGIN_OPTION_ROUTING_ENFORCE": "false"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -6,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/autoload-judgment.py",
+            "command": "python3 -B ~/.claude/hooks/autoload-judgment.py",
             "timeout": 10
           }
         ]
@@ -18,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/skill-routing-guard.py",
+            "command": "python3 -B ~/.claude/hooks/skill-routing-guard.py",
             "timeout": 10
           }
         ]
@@ -26,11 +32,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/fleet-delegation-guard.py",
+            "command": "python3 -B ~/.claude/hooks/fleet-delegation-guard.py",
             "timeout": 10
           }
         ]
@@ -40,7 +46,43 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/tool-routing-guard.py",
+            "command": "python3 -B ~/.claude/hooks/tool-routing-guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B ~/.claude/hooks/agent-telemetry.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B ~/.claude/hooks/evidence-batch.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B ~/.claude/hooks/completion-gate.py",
             "timeout": 10
           }
         ]
@@ -52,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/retrieval-honesty-guard.py",
+            "command": "python3 -B ~/.claude/hooks/retrieval-honesty-guard.py",
             "timeout": 10
           }
         ]

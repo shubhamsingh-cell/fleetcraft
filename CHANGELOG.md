@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.0 integration candidate — unreleased
 
+- Preserves distinct manual-install backups across same-second reinstalls and replaces destination symlinks without writing through them.
+- Reconciles all eight hooks across the manual installer, example settings and plugin registry.
+- Removes duplicate PR CI runs, bounds validation time and refreshes contributor templates.
+
 - Reconciles v0.2 source workflows and the earlier plugin-hardening candidate.
 - Keeps one canonical source tree with a generated, parity-checked plugin.
 - Preserves eleven skills and four roles; adds explicit behavior-evaluation machinery.
