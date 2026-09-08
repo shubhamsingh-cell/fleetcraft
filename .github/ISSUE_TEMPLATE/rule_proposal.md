@@ -7,22 +7,18 @@ assignees: ""
 ---
 
 <!--
-Read CONTRIBUTING.md's "The evidence bar" section before filling this in.
-Every rule here exists because a specific, dated failure happened — "this
-seems better" or "this is a well-known best practice" is not evidence and
-this template won't get you past that bar without the field below filled
-in for real.
+Read CONTRIBUTING.md before filling this in. Ground a proposal in a concrete
+failure, observed usability problem, reproducible preventive finding, or a
+clearly labeled proposal. Do not invent dates or metrics to make a case.
 -->
 
-## What actually broke (required)
+## Evidence or proposal basis (required)
 
 <!--
-Concretely, not "this could cause confusion." What happened, what was the
-observable consequence, and roughly when (even an approximate date is
-fine — the date is what lets a future reader tell a fresh rule from a
-load-bearing one). If you don't have a real failure to point to, this
-proposal isn't ready yet — open a discussion instead, or come back once
-it's happened.
+State the concrete failure, observed usability problem, reproducible
+preventive finding, or proposal. Describe the observable consequence or risk
+and identify supporting artifacts when available. A date is useful context
+when known, but do not fabricate one.
 -->
 
 ## The check that would have caught it
@@ -33,19 +29,16 @@ What rule, hook check, or validator check — if it had existed at the time
 enough that someone could implement it from this description.
 -->
 
-## Which skill/gate class it belongs in
+## Existing surface and routing
 
 <!--
-Does this extend an existing skill (fleet-orchestrator, design-judge,
-incident-miner, growth-web-architect, product-interface-craft, an agent
-contract, or a hook), or does it need a new one? See CONTRIBUTING.md's
-"Proposing a new skill vs. extending an existing one" for the bar — a new
-skill needs its own trigger conditions and routing, not just a rule that
-could be a paragraph in an existing file.
+Which existing skill, agent contract, hook, validator, or documentation
+surface should own this? Extend the narrowest existing surface where possible.
+If a new skill is needed, give its trigger conditions and routing.
 -->
 
-## Sanitization check
+## Sensitive data and attribution check
 
-<!-- Confirm: no employer, client, colleague, or product name appears anywhere in this issue (including any pasted logs/transcripts). Genericize before posting. -->
+<!-- Exclude credentials, private logs, proprietary bundles, and personal context. Keep public product names when they are necessary for accurate attribution; preserve applicable source revisions, licenses, and notices. -->
 
-- [ ] I've re-read this issue for names and genericized anything specific.
+- [ ] I removed sensitive material and preserved any needed public attribution.
