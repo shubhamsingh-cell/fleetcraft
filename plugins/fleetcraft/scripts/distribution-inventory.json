@@ -31,7 +31,7 @@
     "hooks/retrieval-honesty-guard.py": "111371f904d88e90f5a80a22d5a080635d73979fb07b25e2921c1bd90f967ee4",
     "hooks/skill-enforce-guard.py": "85b7d0b3d940e906ad6354ed6537e2fe5c048bdb3676d1b5ca4e1ca3036fc64e",
     "hooks/skill-routing-guard.py": "0a4454fdc5cf0772dfd05d4f9006920792f1da451d20e06740d12f6e7e5de874",
-    "hooks/tool-routing-guard.py": "9e42cb2033fa1abc39c19666d59c5c2d62b14b6231dc9340b121880300aecbfd",
+    "hooks/tool-routing-guard.py": "420cf4ca29a7a84a2487915040db15f3ad76382bea2b054f15a27c33395e4516",
     "scripts/fleetcraft-doctor.py": "8fb217bc66a004a0415d2df58f445020769333222a97517f435b9aae7a0d1756",
     "skills/change-plan/SKILL.md": "cac94a63835bff45a8b5cdaadd58319fbd69a02b1d8e8678cfd2c8babee74c7c",
     "skills/debugging-and-error-recovery/SKILL.md": "396f51f7c9f97a977c8bae3e952bfb470773a34e8c93f2634c9fdd66a26d4eb4",

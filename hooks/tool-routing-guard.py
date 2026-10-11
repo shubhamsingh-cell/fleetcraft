@@ -40,8 +40,10 @@ failure mode is crying wolf on every fetch of a long session; a missed nudge
 costs one reminder. The delegation guard made the opposite choice because a
 silently-dead deploy gate is dangerous; a silently-dead nudge is not.
 
-Never blocks, never sets decision/permissionDecision -- reminder-only, same
-non-blocking contract as the whole family. Subagents get the same nudges (a
+Reminder-only by default. The one exception is the opt-in `routing_enforce`
+plugin option: when it is on, the first documentation-shaped fetch of a session
+is denied once (permissionDecision "deny") and the immediate retry passes. Every
+other nudge never blocks and never sets decision/permissionDecision. Subagents get the same nudges (a
 research subagent can load the MCP tools via ToolSearch), so there is no
 agent_id asymmetry here.
 """
