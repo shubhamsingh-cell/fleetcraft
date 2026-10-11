@@ -1,5 +1,5 @@
 from pathlib import Path
-import hashlib, json, os, shutil, subprocess, sys, tempfile, unittest
+import hashlib, json, os, re, shutil, subprocess, sys, tempfile, unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).parents[1]
@@ -223,7 +223,7 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn('test "$(npm --version)" = "10.9.4"', text)
 
     def test_release_version_gate_accepts_current_version_and_rejects_wrong_tag(self):
-        passed = subprocess.run([sys.executable, "scripts/check_release_version.py", "--tag", "v0.3.0"], cwd=ROOT, text=True, capture_output=True)
+        passed = subprocess.run([sys.executable, "scripts/check_release_version.py", "--tag", "v" + re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE).group(1)], cwd=ROOT, text=True, capture_output=True)
         failed = subprocess.run([sys.executable, "scripts/check_release_version.py", "--tag", "v9.9.9"], cwd=ROOT, text=True, capture_output=True)
         self.assertEqual(passed.returncode, 0, passed.stdout + passed.stderr)
         self.assertNotEqual(failed.returncode, 0)

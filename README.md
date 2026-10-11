@@ -4,7 +4,7 @@
 skills, executor/researcher/verifier/strategist roles, optional runtime guards, and
 repeatable checks for the work an agent is about to call complete.
 
-**Version 0.3.0.** This combines the v0.2 source workflows with the earlier
+**Version 0.3.1.** This combines the v0.2 source workflows with the earlier
 plugin-hardening work. A source commit, a passing test suite, and a tagged package are
 different milestones: a `v*` tag is only a release once CI's tag job has installed the
 *public* package at that tag in an isolated config dir and diffed it against the tagged
@@ -14,7 +14,7 @@ skill-activation evaluation this version does not claim to have resolved.
 
 ## Install
 
-The existing `v0.3.0` tag has a [failed public-install verification](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245): the pinned Claude CLI adds an empty loader directory that the package doctor rejects. Installation success alone does not establish package readiness. The original tag is preserved; use the source evaluation path below while follow-up repairs are verified.
+The existing `v0.3.0` tag has a [failed public-install verification](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245): the pinned Claude CLI adds an empty loader directory that the package doctor rejects. Installation success alone does not establish package readiness. The original tag is preserved and `v0.3.1` carries the repaired doctor; its tag job is the first public-install verification that can pass. Until that run is recorded in [EVIDENCE.md](EVIDENCE.md), use the source evaluation path below.
 
 ## Evaluate from source instead
 

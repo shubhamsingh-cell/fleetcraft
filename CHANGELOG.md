@@ -21,6 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and start a fresh empty `## [Unreleased]` above it.
 -->
 
+## [0.3.1] - 2026-09-08
+
+Release repair. `v0.3.0` shipped a package that installs but whose own doctor
+rejects it: Claude Code 2.1.263 creates an empty `.in_use/` loader directory in
+the installed package, and the doctor treated any extra directory as corruption,
+so the tag's public-install job failed. The repair itself landed in #4
+(accept only an empty, non-symlink, top-level `.in_use`; keep nonempty markers,
+symlinks and unrelated extras rejected). This release carries that repair under a
+new version, because a published tag must not move.
+
+### Fixed
+
+- Do not pin `v0.3.0`: its package gate failed
+  ([run](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245)).
+  Use `v0.3.1`.
+- Release-contract and eval-runner tests no longer hardcode the package version,
+  so a version bump no longer requires editing tests.
+
 ## [0.3.0] - 2026-09-08
 
 **Verification failed:** the immutable tag exists, but its [public-install CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245)
@@ -249,7 +267,8 @@ Initial public release.
   document/share/design/exec-message prompts to the matching installed
   skill instead of an ad hoc answer.
 
-[Unreleased]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/shubhamsingh-cell/fleetcraft/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/shubhamsingh-cell/fleetcraft/releases/tag/v0.1.0

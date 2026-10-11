@@ -1,6 +1,6 @@
 {
   "files": {
-    ".claude-plugin/plugin.json": "4a61e4ae1ac9dda25b625877ee3c9d691764544266c9e49478108d7cde991eee",
+    ".claude-plugin/plugin.json": "b5af1553ab2b5fe747b8bc91ab6fbc0a09499c8d1e0e7bb5cf2b37fa0765bba6",
     "LICENSE": "35de4ad258411eb91295a0b3adf8519e0431139f384920ae0313364b1c0efd59",
     "THIRD_PARTY_NOTICES.md": "46c66dcf44c5e73762fb3d6ce565cb7378313b7fd31653816486e7654322f6a5",
     "agents/executor.md": "14e84349263f4568ffa70005cf020a473a19dd80e023090727d8ca33d11eb5cc",

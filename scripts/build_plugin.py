@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_DEST = ROOT / "plugins" / "fleetcraft"
 DEST = Path(os.environ.get("FLEETCRAFT_PLUGIN_DEST", CANONICAL_DEST))
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 KERNEL = """# Fleetcraft judgment kernel
 

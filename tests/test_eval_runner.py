@@ -274,7 +274,7 @@ class EvalTraceTests(unittest.TestCase):
                 if command[1:] == ["--version"]:
                     return SimpleNamespace(returncode=0, stdout="2.1.263\n", stderr="")
                 plugin = command[command.index("--plugin-dir") + 1]
-                raw = stream(plugins=[{"name": "fleetcraft", "path": str(Path(plugin).resolve()), "version": "0.3.0"}], cwd=str(kwargs["cwd"].resolve()))
+                raw = stream(plugins=[{"name": "fleetcraft", "path": str(Path(plugin).resolve()), "version": json.loads((Path(plugin) / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]}], cwd=str(kwargs["cwd"].resolve()))
                 return SimpleNamespace(returncode=0, stdout=raw, stderr="")
 
             ev.subprocess.run = fake_run
