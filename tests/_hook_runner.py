@@ -34,6 +34,7 @@ HOOK_FILES = {
     "skill_routing_guard": "skill-routing-guard.py",
     "tool_routing_guard": "tool-routing-guard.py",
     "retrieval_honesty_guard": "retrieval-honesty-guard.py",
+    "skill_enforce_guard": "skill-enforce-guard.py",
 }
 
 for _key, _fname in HOOK_FILES.items():

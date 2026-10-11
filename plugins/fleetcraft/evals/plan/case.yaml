@@ -1,0 +1,28 @@
+schema_version: "1.0"
+name: plan
+tags: [activation]
+runs: 3
+execution:
+  prompt: |
+    File content of api.txt:
+    Rename the response field `fullName` to `name`. One client is unknown. Deployment is not approved.
+
+    Use or load the relevant installed planning skill if available, then provide a plan. In at
+    most 220 words retain fullName/name, the unknown consumer, and unapproved deployment; include
+    a staged rollback-aware plan.
+  max_turns: 3
+  timeout_seconds: 120
+  model: sonnet
+  allowed_tools: [Skill]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: change-plan
+    # NO arm: -- deliberately. Under --ablation with-without a tool_used:Skill grader
+    # with no arm is display-only (reported, not scored). Adding arm: scores a check
+    # the baseline can never pass and inflates uplift.
+  - name: outcome-unknown
+    type: regex
+    target: last_message
+    pattern: "(?i)unknown"

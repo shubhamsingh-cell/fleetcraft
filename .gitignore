@@ -6,6 +6,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 artifacts/evals/
+evals/results/
 node_modules/
 
 # macOS

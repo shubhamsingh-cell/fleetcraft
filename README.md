@@ -96,6 +96,8 @@ This preserves a reviewable source layout while making the plugin self-contained
 
 The [reconciliation record](docs/RECONCILIATION.md) explains what was preserved from each
 parent; the [lesson map](docs/SESSION_LESSON_MAP.md) makes the integration scope explicit. [Compatibility](COMPATIBILITY.md) describes tested environments and optional features.
+[Skill activation](docs/SKILL_ACTIVATION.md) covers measurement, container choice, and
+token economy for skills, hooks, and permission rules.
 
 ## Evaluate behavior, not just syntax
 

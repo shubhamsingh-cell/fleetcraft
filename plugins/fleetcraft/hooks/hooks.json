@@ -56,6 +56,19 @@
           }
         ],
         "matcher": "WebFetch|WebSearch"
+      },
+      {
+        "hooks": [
+          {
+            "args": [
+              "-B",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/skill-enforce-guard.py"
+            ],
+            "command": "python3",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash|Grep|Glob"
       }
     ],
     "SessionStart": [

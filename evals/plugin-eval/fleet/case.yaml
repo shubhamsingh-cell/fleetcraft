@@ -1,0 +1,28 @@
+schema_version: "1.0"
+name: fleet
+tags: [activation]
+runs: 3
+execution:
+  prompt: |
+    Use or load the relevant installed workflow if available, then coordinate two owned modules
+    with an independent review: module-a has the implementation and module-b has the test
+    fixture; no side effects are approved.
+  max_turns: 3
+  timeout_seconds: 120
+  model: sonnet
+  allowed_tools: [Skill]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: fleet-orchestrator
+    # NO arm: -- deliberately. Under --ablation with-without a tool_used:Skill grader
+    # with no arm is display-only (reported, not scored). Adding arm: scores a check
+    # the baseline can never pass and inflates uplift.
+  - name: outcome-assessment-or-missing-artifact
+    type: llm
+    focus: last_message
+    body: |
+      The response either performs the requested fleet-coordination assessment or explicitly
+      names the missing artifact (design, code, package) it would need to proceed. A generic
+      refusal or an answer that ignores the request fails.

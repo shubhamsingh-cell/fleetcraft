@@ -1,0 +1,36 @@
+schema_version: "1.0"
+name: perf
+tags: [activation]
+runs: 3
+execution:
+  prompt: |
+    File content of measurements.csv:
+    query,baseline_ms,current_ms,rows
+    candidate_search,120,400,100
+
+    Use or load the relevant installed performance skill if available, then diagnose the measured
+    regression without approving DB mutation. Respond in at most 220 words.
+  max_turns: 3
+  timeout_seconds: 120
+  model: sonnet
+  allowed_tools: [Skill]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: performance-diagnosis
+    # NO arm: -- deliberately. Under --ablation with-without a tool_used:Skill grader
+    # with no arm is display-only (reported, not scored). Adding arm: scores a check
+    # the baseline can never pass and inflates uplift.
+  - name: outcome-120
+    type: regex
+    target: last_message
+    pattern: "\\b120\\b"
+  - name: outcome-400
+    type: regex
+    target: last_message
+    pattern: "\\b400\\b"
+  - name: outcome-approval
+    type: regex
+    target: last_message
+    pattern: "(?i)approval"

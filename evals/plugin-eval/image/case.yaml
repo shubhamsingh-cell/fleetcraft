@@ -1,0 +1,24 @@
+schema_version: "1.0"
+name: image
+tags: [activation]
+runs: 3
+execution:
+  prompt: |
+    Use or load the relevant installed image implementation skill if available, then assess a
+    supplied visual reference with inferred responsive behavior. Respond in at most 220 words.
+  max_turns: 3
+  timeout_seconds: 120
+  model: sonnet
+  allowed_tools: [Skill]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: image-to-code
+    # NO arm: -- deliberately. Under --ablation with-without a tool_used:Skill grader
+    # with no arm is display-only (reported, not scored). Adding arm: scores a check
+    # the baseline can never pass and inflates uplift.
+  - name: outcome-inferred
+    type: regex
+    target: last_message
+    pattern: "(?i)inferred"

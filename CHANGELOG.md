@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`hooks/skill-enforce-guard.py`** — reminds (or, opt-in via `preflight_enforce`,
+  denies-once-then-allows) on the first commit/push of a session without a gitleaks
+  preflight, and on the first broad recursive search of a session in a cwd with a
+  `graphify-out/` index. Registered `PreToolUse` on `Bash|Grep|Glob`; new
+  `preflight_enforce` and `gitleaks_path` plugin options.
+- **`evals/plugin-eval/<id>/case.yaml`** — first-party `claude plugin eval` cases for
+  all 12 `evals/skill-routing.json` corpus ids, fixtures inlined and tools restricted to
+  `Skill` so a run measures activation only; copied into `plugins/fleetcraft/evals/` by
+  `scripts/build_plugin.py`. Discovery and schema acceptance verified by a real run; the sandboxed
+  agent could not authenticate on an interactive-login host (`partial: auth_failed`), so no
+  activation rate is claimed — see `evals/README.md`.
+- **`docs/SKILL_ACTIVATION.md`** — measurement, container-choice, and token-economy
+  findings for skill activation, sourced from a dedicated research brief.
+
 ### Fixed
 
 - Accept only the pinned loader's empty regular top-level `.in_use` directory in installed-package checks; remove that empty metadata directory before the exact tag archive comparison.

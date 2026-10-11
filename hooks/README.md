@@ -17,6 +17,7 @@ new hooks were loaded.
 | `skill-routing-guard.py` | UserPromptSubmit | Adds context for recognized task shapes; does not guarantee skill selection. |
 | `fleet-delegation-guard.py` | PreToolUse, Bash or PowerShell | `delegation_mode=audit` adds reminders. Opt-in `strict` asks for publish-shaped or unsupported shell constructs. It is a bounded parser, not a general shell sandbox. |
 | `tool-routing-guard.py` | PreToolUse, WebFetch or WebSearch | Reminds by default. `routing_enforce=true` can deny the first matching documentation fetch in a session, allowing a retry if no suitable documentation capability is available. |
+| `skill-enforce-guard.py` | PreToolUse, Bash or Grep or Glob | Reminds by default on the first commit/push (gitleaks preflight) and the first broad search in a `graphify-out/`-indexed cwd (query the graph first). `preflight_enforce=true` denies each lane once per session; every retry passes. |
 | `agent-telemetry.py` | PostToolUse, Agent | Reports model fields supplied by the harness when present; never derives identity from model prose. No model-quality verdict. |
 | `completion-gate.py` | TaskCompleted | Disabled unless `completion_gate=true`. Only tasks explicitly marked `[fleetcraft:verified]` receive the evidence-field gate. |
 | `evidence-batch.py` | PostToolBatch | Disabled unless `evidence_batch=true`. Summarizes observed tool names without saving prompt/result content. A batch count is not success proof. |
