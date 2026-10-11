@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_INSTALL_BYTES = 1_000_000
-ALLOWED_TOP_LEVEL = {".claude-plugin", "LICENSE", "THIRD_PARTY_NOTICES.md", "agents", "hooks", "scripts", "skills"}
+ALLOWED_TOP_LEVEL = {".claude-plugin", "LICENSE", "THIRD_PARTY_NOTICES.md", "agents", "evals", "hooks", "scripts", "skills"}
 FORBIDDEN_PATHS = {".github", "artifacts", "tests", "pyproject.toml", "package.json", "package-lock.json", "node_modules"}
 
 

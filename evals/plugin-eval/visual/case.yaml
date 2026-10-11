@@ -1,0 +1,24 @@
+schema_version: "1.0"
+name: visual
+tags: [activation]
+runs: 3
+execution:
+  prompt: |
+    Use or load the relevant installed visual-review skill if available. No render is supplied;
+    keep visual readiness OPEN. Respond in at most 220 words.
+  max_turns: 3
+  timeout_seconds: 120
+  model: sonnet
+  allowed_tools: [Skill]
+graders:
+  - name: skill-fired
+    type: tool_used
+    tool: Skill
+    input_match: design-judge
+    # NO arm: -- deliberately. Under --ablation with-without a tool_used:Skill grader
+    # with no arm is display-only (reported, not scored). Adding arm: scores a check
+    # the baseline can never pass and inflates uplift.
+  - name: outcome-open
+    type: regex
+    target: last_message
+    pattern: "(?i)open"

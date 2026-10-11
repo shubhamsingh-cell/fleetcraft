@@ -1,4 +1,4 @@
-"""Behavioural + robustness suite for the five hooks in hooks/.
+"""Behavioural + robustness suite for the six hooks in hooks/.
 
 RUNS TWO WAYS (both must pass):
     python3 -m unittest discover -s tests -v
@@ -850,6 +850,211 @@ class TestRetrievalHonestyGuard(IsolatedHookTestCase):
         self.assertEqual(data.get("decision"), "block")
         markers = list(self.tmp.glob("claude-retrieval-guard-*"))
         self.assertTrue(markers, f"expected a marker file under {self.tmp}, found none")
+
+
+# =============================================================================
+# 6. skill-enforce-guard.py -- PreToolUse, Bash|Grep|Glob
+# =============================================================================
+class TestSkillEnforceGuard(IsolatedHookTestCase):
+    HOOK = "skill_enforce_guard"
+
+    def _state_dir(self, name):
+        d = self.tmp_root / "seg-state" / name
+        d.mkdir(parents=True)
+        return str(d)
+
+    def _graphify_cwd(self, name, present=True):
+        d = self.tmp_root / "seg-cwd" / name
+        d.mkdir(parents=True)
+        if present:
+            (d / "graphify-out").mkdir()
+        return str(d)
+
+    # -- gitleaks lane: fires / silent pair ---------------------------------
+    def test_reminder_fires_on_first_git_commit(self):
+        state = self._state_dir("gitleaks-fires")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "git commit -m 'wip'"},
+                "session_id": "s-gitleaks",
+            },
+            env_overrides=env,
+        )
+        data = self.assert_fires(proc, contains="first commit/push of the session")
+        hso = data["hookSpecificOutput"]
+        self.assertEqual(hso.get("hookEventName"), "PreToolUse")
+        self.assertNotIn("permissionDecision", hso)
+
+    def test_silent_on_plain_bash(self):
+        state = self._state_dir("gitleaks-silent")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "ls -la"},
+                "session_id": "s-plain",
+            },
+            env_overrides=env,
+        )
+        self.assert_silent(proc)
+
+    # -- gitleaks lane: already-scanned command stays silent ----------------
+    def test_silent_when_command_already_contains_gitleaks(self):
+        state = self._state_dir("gitleaks-already-scanned")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "gitleaks detect --staged && git commit -m 'wip'"},
+                "session_id": "s-already-scanned",
+            },
+            env_overrides=env,
+        )
+        self.assert_silent(proc)
+
+    # -- gitleaks lane: deny-then-allow contract, end to end -----------------
+    def test_deny_when_enforce_true_then_allow_on_second_call(self):
+        state = self._state_dir("gitleaks-deny-allow")
+        env = {
+            "CLAUDE_SKILL_ENFORCE_STATE_DIR": state,
+            "CLAUDE_PLUGIN_OPTION_PREFLIGHT_ENFORCE": "true",
+        }
+        payload = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "git push origin main"},
+            "session_id": "s-deny-allow",
+        }
+
+        first = self.run_hook_json(self.HOOK, payload, env_overrides=env)
+        data = self.assert_fires(first)
+        hso = data["hookSpecificOutput"]
+        self.assertEqual(hso.get("permissionDecision"), "deny")
+        self.assertIn("DENIED this commit/push", hso.get("permissionDecisionReason", ""))
+
+        second = self.run_hook_json(self.HOOK, payload, env_overrides=env)
+        self.assert_silent(second, "retry of the same command in the same session must be allowed")
+
+    # -- command-position anchoring: quoted git commit inside claude -p ------
+    def test_quoted_git_commit_inside_claude_p_does_not_fire(self):
+        state = self._state_dir("gitleaks-quoted")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": 'claude -p "please run git commit and push when done"'},
+                "session_id": "s-quoted",
+            },
+            env_overrides=env,
+        )
+        self.assert_silent(proc, "a quoted git commit inside a claude -p argument must not fire")
+
+    # -- graphify lane: fires / silent pair -----------------------------------
+    def test_graphify_fires_when_graphify_out_dir_exists(self):
+        state = self._state_dir("graphify-fires")
+        cwd = self._graphify_cwd("present", present=True)
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "rg -n 'def main' ."},
+                "session_id": "s-graphify-fires",
+                "cwd": cwd,
+            },
+            env_overrides=env,
+        )
+        self.assert_fires(proc, contains="graphify-out/ index")
+
+    def test_silent_when_graphify_out_absent(self):
+        state = self._state_dir("graphify-silent")
+        cwd = self._graphify_cwd("absent", present=False)
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "rg -n 'def main' ."},
+                "session_id": "s-graphify-silent",
+                "cwd": cwd,
+            },
+            env_overrides=env,
+        )
+        self.assert_silent(proc)
+
+    # -- graphify lane: Grep tool event, not just Bash ------------------------
+    def test_grep_tool_event_fires_graphify_lane_when_index_present(self):
+        state = self._state_dir("graphify-grep-tool")
+        cwd = self._graphify_cwd("grep-tool", present=True)
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        proc = self.run_hook_json(
+            self.HOOK,
+            {
+                "tool_name": "Grep",
+                "tool_input": {"pattern": "def main"},
+                "session_id": "s-grep-tool",
+                "cwd": cwd,
+            },
+            env_overrides=env,
+        )
+        self.assert_fires(proc, contains="graphify-out/ index")
+
+    # -- once-per-session, both lanes ------------------------------------------
+    def test_gitleaks_reminder_fires_once_then_silent(self):
+        state = self._state_dir("gitleaks-once")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        payload = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "git commit -am 'again'"},
+            "session_id": "s-once",
+        }
+        self.assert_fires(self.run_hook_json(self.HOOK, payload, env_overrides=env))
+        self.assert_silent(
+            self.run_hook_json(self.HOOK, payload, env_overrides=env),
+            "gitleaks reminder fires at most once per session",
+        )
+
+    # -- kill switch ------------------------------------------------------------
+    def test_kill_switch_default_is_reminder_not_deny(self):
+        state = self._state_dir("kill-switch")
+        env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": state}
+        payload = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "git commit -m 'wip'"},
+            "session_id": "s-killswitch",
+        }
+        proc = self.run_hook_json(self.HOOK, payload, env_overrides=env)
+        data = self.assert_fires(proc)
+        hso = data["hookSpecificOutput"]
+        self.assertNotIn("permissionDecision", hso)
+        self.assertIsNone(hso.get("permissionDecision"))
+
+    # -- fail-open / robustness -----------------------------------------------
+    def test_fail_open_robustness(self):
+        malformed_and_unexpected = [
+            "",
+            "{}",
+            "{not valid json",
+            "[]",
+            "null",
+            "42",
+            '"a string"',
+            '{"tool_name": "Bash"}',
+            '{"tool_name": "Bash", "tool_input": 123}',
+            '{"tool_name": "Bash", "tool_input": {"command": 123}}',
+            '{"tool_name": "SomethingElse", "tool_input": {}}',
+            '{"tool_name": null}',
+        ]
+        for i, stdin_text in enumerate(malformed_and_unexpected):
+            with self.subTest(stdin=stdin_text):
+                env = {"CLAUDE_SKILL_ENFORCE_STATE_DIR": self._state_dir(f"robustness-{i}")}
+                proc = self.run_hook(self.HOOK, stdin_text, env_overrides=env)
+                self.assert_silent(proc, f"stdin={stdin_text!r}")
 
 
 if __name__ == "__main__":

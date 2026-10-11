@@ -105,6 +105,9 @@ def main() -> int:
     notices = ROOT / "THIRD_PARTY_NOTICES.md"
     if notices.is_file():
         shutil.copy2(notices, destination / notices.name)
+    plugin_eval_source = ROOT / "evals" / "plugin-eval"
+    if plugin_eval_source.is_dir():
+        copy_tree(plugin_eval_source, destination / "evals")
 
     write_json(destination / ".claude-plugin" / "plugin.json", {
         "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
@@ -120,6 +123,8 @@ def main() -> int:
             "completion_gate": {"type": "boolean", "title": "Completion evidence gate", "default": False, "description": "Require evidence fields for explicitly verified tasks."},
             "evidence_batch": {"type": "boolean", "title": "Batch evidence reminders", "default": False, "description": "Summarize observed completed tool batches without treating them as proof."},
             "routing_enforce": {"type": "boolean", "title": "Routing enforcement", "default": False, "description": "Opt in to bounded documentation-routing enforcement."},
+            "preflight_enforce": {"type": "boolean", "title": "Preflight enforcement", "default": False, "description": "Deny the first commit/push and first broad search of a session until the preflight has run; retry passes"},
+            "gitleaks_path": {"type": "string", "title": "Gitleaks binary path", "default": "", "description": "Path to a gitleaks binary to name in the reminder; empty names the project URL github.com/gitleaks/gitleaks"},
         },
     })
     marketplace_path = ROOT / ".claude-plugin" / "marketplace.json"
@@ -136,6 +141,7 @@ def main() -> int:
             "PreToolUse": [
                 {"matcher": "Bash|PowerShell", "hooks": [{"type": "command", "command": "python3", "args": ["-B", "${CLAUDE_PLUGIN_ROOT}/hooks/fleet-delegation-guard.py"]}]},
                 {"matcher": "WebFetch|WebSearch", "hooks": [{"type": "command", "command": "python3", "args": ["-B", "${CLAUDE_PLUGIN_ROOT}/hooks/tool-routing-guard.py"]}]},
+                {"matcher": "Bash|Grep|Glob", "hooks": [{"type": "command", "command": "python3", "args": ["-B", "${CLAUDE_PLUGIN_ROOT}/hooks/skill-enforce-guard.py"]}]},
             ],
             "PostToolUse": [{"matcher": "Agent", "hooks": [{"type": "command", "command": "python3", "args": ["-B", "${CLAUDE_PLUGIN_ROOT}/hooks/agent-telemetry.py"]}]}],
             "TaskCompleted": [{"hooks": [{"type": "command", "command": "python3", "args": ["-B", "${CLAUDE_PLUGIN_ROOT}/hooks/completion-gate.py"]}]}],

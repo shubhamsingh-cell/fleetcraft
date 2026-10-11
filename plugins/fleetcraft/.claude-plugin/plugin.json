@@ -32,6 +32,18 @@
       "title": "Batch evidence reminders",
       "type": "boolean"
     },
+    "gitleaks_path": {
+      "default": "",
+      "description": "Path to a gitleaks binary to name in the reminder; empty names the project URL github.com/gitleaks/gitleaks",
+      "title": "Gitleaks binary path",
+      "type": "string"
+    },
+    "preflight_enforce": {
+      "default": false,
+      "description": "Deny the first commit/push and first broad search of a session until the preflight has run; retry passes",
+      "title": "Preflight enforcement",
+      "type": "boolean"
+    },
     "routing_enforce": {
       "default": false,
       "description": "Opt in to bounded documentation-routing enforcement.",
