@@ -164,10 +164,12 @@
         </div>
 
         <div class="status">
-          <strong>Version 0.3.0.</strong> A source commit, a passing test suite, and a tagged
+          <strong>Version 0.3.1.</strong> A source commit, a passing test suite, and a tagged
           package are different milestones: a <code>v*</code> tag is only a release once CI's tag
           job has installed the public package at that tag and diffed it against the tagged
-          source. <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+          source. The v0.3.0 tag failed that check and was replaced by v0.3.1, whose
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/38123386931">tag CI run passed</a>.
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">CHANGELOG.md</a>
           records what each version verified;
           <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">EVIDENCE.md</a>
           records observed checks and their limitations.
@@ -187,16 +189,17 @@
 validate.py: OK — 25 checks passed, 0 warning(s)
 
 <span class="c">$ python3 -m pytest tests/ -q</span>
-108 passed in 18.76s</code></pre>
+117 passed in 26.54s</code></pre>
         <figcaption>
           <span class="counts">11 skills · 4 agent roles · 8 runtime hooks · 1 generated, parity-checked plugin</span>
           Verbatim output, abridged where marked, at
-          <a href="https://github.com/shubhamsingh-cell/fleetcraft/tree/v0.3.0">v0.3.0</a>
-          (<a href="https://github.com/shubhamsingh-cell/fleetcraft/commit/ad7913d">ad7913d</a>),
-          2026-09-08, macOS, Python 3.9. Later commits on <code>main</code> may differ. The same
-          two commands are in the quickstart below; run them yourself. Most hook effects are
-          configurable; three reminder hooks always run, and the judgment autoload and
-          audit-mode delegation reminders are on by default.
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/tree/v0.3.1">v0.3.1</a>
+          (<a href="https://github.com/shubhamsingh-cell/fleetcraft/commit/8ade0c2">8ade0c2</a>),
+          2026-10-11, macOS, Python 3.9. Later commits on <code>main</code> may differ. The same
+          two commands are in the quickstart below; run them yourself. In the plugin, five of the eight hooks have a setting;
+          skill routing, agent telemetry and the retrieval-honesty check always run. Defaults:
+          judgment autoload and audit-mode delegation reminders on; completion gate and
+          evidence batching off; documentation routing reminds only.
         </figcaption>
       </figure>
     </div>
