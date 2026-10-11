@@ -1,7 +1,7 @@
 # Evidence register
 
-Observed on 2026-09-08. The existing **v0.3.0 tag failed its public-install contract**;
-source follow-up repairs are unreleased. This is not a demonstrated improvement over other agent systems. Popularity and permissive licenses
+Observed 2026-09-08 to 2026-10-11. The **v0.3.0 tag failed its public-install contract**; the repair
+ships as **v0.3.1**, whose tag job passed that contract (row below). This is not a demonstrated improvement over other agent systems. Popularity and permissive licenses
 help select references; they do not establish quality.
 
 | Check | Observed result | Limit |
@@ -16,6 +16,7 @@ help select references; they do not establish quality.
 | Dependency advisory audit | OPEN: offline OSV npm database unavailable | No clean vulnerability verdict |
 | Linux CI | Python 3.9/3.11/3.13 passed on `4c3b7df8e6df983828518d2530db5ef809e13d69` | [Exact integration CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34161918923); later code needs fresh CI |
 | Public immutable tag install | v0.3.0 at `ad7913d` failed: doctor rejects loader-created empty `.in_use` directory | [Observed failed tag CI](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245); original tag remains unchanged |
+| Public immutable tag install | v0.3.1 at `8ade0c2` passed: marketplace install at the tag, doctor PASS with the loader-created `.in_use` present, strict delegation mode returns `ask`, installed tree identical to `git archive` of the tagged commit | [Tag CI run](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/38123386931); first passing public-install verification, one CLI version (2.1.263) |
 
 ## Installer follow-up
 

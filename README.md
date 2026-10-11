@@ -14,7 +14,21 @@ skill-activation evaluation this version does not claim to have resolved.
 
 ## Install
 
-The existing `v0.3.0` tag has a [failed public-install verification](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245): the pinned Claude CLI adds an empty loader directory that the package doctor rejects. Installation success alone does not establish package readiness. The original tag is preserved and `v0.3.1` carries the repaired doctor; its tag job is the first public-install verification that can pass. Until that run is recorded in [EVIDENCE.md](EVIDENCE.md), use the source evaluation path below.
+From the Claude Code plugin marketplace, pinned to a tag (`main` is a source tree, not a release):
+
+```
+/plugin marketplace add shubhamsingh-cell/fleetcraft@v0.3.1
+/plugin install fleetcraft@fleetcraft
+```
+
+Then run `/fleetcraft:doctor` in a new session. `v0.3.1` is the first tag whose public
+install was verified end to end: its [tag job](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/38123386931) installed the public package in an
+isolated config directory, ran the doctor, exercised strict delegation mode, and diffed
+the installed tree against `git archive` of the tagged commit. Do not pin `v0.3.0`: its
+[tag job failed](https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245)
+because the package doctor rejected the empty loader directory Claude Code creates.
+Read [SECURITY.md](SECURITY.md) before enabling hooks — they run in your shell on every
+matching event.
 
 ## Evaluate from source instead
 
