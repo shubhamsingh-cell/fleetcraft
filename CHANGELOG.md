@@ -22,9 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   activation rate is claimed — see `evals/README.md`.
 - **`docs/SKILL_ACTIVATION.md`** — measurement, container-choice, and token-economy
   findings for skill activation, sourced from a dedicated research brief.
+- **`site/`** — static landing page (single file, no scripts, no external requests)
+  pinned to the `v0.3.1` tag: verbatim `validate.py` and test output with every omission
+  marked, the passing and failing tag-job links, and an eight-row table of what each hook
+  can do in your shell, including the two that write marker files and the one that reads
+  the session transcript. Reviewed by a three-lens design panel; the remaining ceiling it
+  reported is visual identity, not defects.
 
 ### Fixed
 
+- `hooks/tool-routing-guard.py` docstring claimed it never blocks; it denies a documentation fetch once when the opt-in `routing_enforce` option is on. Docstring only.
 - Accept only the pinned loader's empty regular top-level `.in_use` directory in installed-package checks; remove that empty metadata directory before the exact tag archive comparison.
 
 - Preserve distinct manual-install backups across same-second reinstalls and replace destination symlinks without writing through them.

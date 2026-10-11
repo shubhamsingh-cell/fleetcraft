@@ -13,6 +13,7 @@
     --ink: #1c1b18;
     --ink-2: #5b5852;
     --line: #dcd8cf;
+    --line-strong: #b9b4a8;
     --accent: #2b5d9c;
     --accent-ink: #ffffff;
     --code-bg: #1c1b18;
@@ -22,13 +23,14 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #141413;
-      --bg-2: #1d1d1b;
+      --bg-2: #262624;
       --ink: #ebe8e0;
       --ink-2: #a39f95;
-      --line: #2d2d2a;
+      --line: #35352f;
+      --line-strong: #55554d;
       --accent: #8ab4ec;
       --accent-ink: #0f1a2a;
-      --code-bg: #0b0b0a;
+      --code-bg: #0a0a09;
       --code-ink: #e6e2d8;
       --ok: #7fcf9c;
     }
@@ -41,7 +43,7 @@
     color: var(--ink);
     font: 16px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
   }
-  code, pre, .mono {
+  code, pre {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     font-size: 0.92em;
   }
@@ -49,7 +51,9 @@
   a:hover, a:focus-visible { text-decoration: underline; }
   a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  section .wrap > * { max-width: 880px; }
+  section .wrap > .tablewrap, section .wrap > pre { max-width: none; }
 
   header.top {
     border-bottom: 1px solid var(--line);
@@ -57,18 +61,19 @@
   }
   header.top .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .brand { font-weight: 650; letter-spacing: -0.01em; color: var(--ink); }
-  nav a { margin-left: 20px; color: var(--ink-2); font-size: 15px; }
+  nav a { display: inline-block; padding: 12px 8px; margin-left: 10px; color: var(--ink-2); font-size: 15px; }
   nav a:hover { color: var(--accent); }
 
-  .hero { padding: 72px 0 40px; }
+  .hero { padding-block: 72px 40px; }
   .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; align-items: start; }
   @media (min-width: 1100px) {
-    .wrap.hero { max-width: 1180px; }
-    .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; }
+    .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; }
     .hero-grid .proof { margin-top: 6px; }
   }
+  .hero-grid > div:first-child { max-width: 760px; }
   .proof { margin: 0; }
-  .proof pre { margin: 0; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .proof pre { margin: 0; font-size: 12px; padding: 16px 16px; white-space: pre; }
+  .proof pre code { font-size: 1em; }
   .proof figcaption { font-size: 14px; color: var(--ink-2); margin-top: 12px; line-height: 1.5; }
   .proof figcaption .counts { display: block; color: var(--ink); font-weight: 600; margin-bottom: 4px; }
   .eyebrow {
@@ -79,11 +84,11 @@
     font-size: clamp(34px, 5.5vw, 52px); line-height: 1.08; letter-spacing: -0.025em;
     margin: 18px 0 16px; max-width: 18ch;
   }
-  .lede { font-size: 19px; color: var(--ink-2); max-width: 60ch; margin: 0 0 28px; }
+  .lede { font-size: clamp(17px, 2vw, 19px); color: var(--ink-2); max-width: 60ch; margin: 0 0 28px; }
   .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .btn {
     display: inline-block; padding: 10px 16px; border-radius: 8px; font-weight: 600;
-    border: 1px solid var(--line); color: var(--ink); background: var(--bg-2);
+    border: 1px solid var(--line-strong); color: var(--ink); background: var(--bg-2);
   }
   .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .btn:hover { text-decoration: none; filter: brightness(1.04); }
@@ -95,19 +100,16 @@
   .status strong { color: var(--ink); }
 
   section { padding: 40px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: 24px; letter-spacing: -0.015em; margin: 0 0 14px; }
+  h2 { font-size: clamp(21px, 2.4vw, 24px); letter-spacing: -0.015em; margin: 0 0 14px; }
+  h3 { font-size: 18px; letter-spacing: -0.01em; margin: 32px 0 10px; }
   p { max-width: 68ch; }
 
   pre {
     background: var(--code-bg); color: var(--code-ink); padding: 18px 20px; border-radius: 10px;
-    overflow-x: auto; margin: 16px 0; line-height: 1.5;
+    overflow-x: auto; margin: 16px 0; line-height: 1.5; border: 1px solid var(--line-strong);
   }
+  pre.wrap-lines { white-space: pre-wrap; overflow-wrap: anywhere; -webkit-user-select: all; user-select: all; }
   pre .c { opacity: 0.55; }
-
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 24px 0 0; }
-  .fact { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--bg-2); }
-  .fact b { display: block; font-size: 26px; letter-spacing: -0.02em; line-height: 1.1; }
-  .fact span { color: var(--ink-2); font-size: 14px; }
 
   .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
   table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
@@ -124,13 +126,23 @@
 
   footer { border-top: 1px solid var(--line); padding: 28px 0 48px; color: var(--ink-2); font-size: 14px; }
   footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  footer a { color: var(--ink-2); margin-right: 16px; }
+  footer a { display: inline-block; padding: 12px 0; color: var(--ink-2); margin-right: 16px; }
   footer a:hover { color: var(--accent); }
 
+  @media (max-width: 640px) {
+    table { min-width: 0; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; }
+    tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: 2px 14px; }
+    td code { white-space: normal; overflow-wrap: anywhere; }
+    td[data-label]::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink-2); font-size: 13px; }
+  }
   @media (max-width: 600px) {
-    .hero { padding: 48px 0 32px; }
-    nav a { margin-left: 14px; }
-    .facts { grid-template-columns: 1fr 1fr; }
+    .eyebrow { font-size: 12px; letter-spacing: 0.02em; white-space: nowrap; }
+    .hero { padding-block: 48px 32px; }
+    nav a { margin-left: 2px; }
   }
 </style>
 </head>
@@ -159,47 +171,49 @@
           guards, and repeatable checks for the work an agent is about to call complete.
         </p>
         <div class="actions">
-          <a class="btn primary" href="https://github.com/shubhamsingh-cell/fleetcraft">View the source on GitHub</a>
-          <a class="btn" href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">Read the evidence record</a>
+          <a class="btn primary" href="#start">Install</a>
+          <a class="btn" href="https://github.com/shubhamsingh-cell/fleetcraft">Source on GitHub</a>
+          <a class="btn" href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">Evidence record</a>
         </div>
 
         <div class="status">
           <strong>Version 0.3.1.</strong> A source commit, a passing test suite, and a tagged
           package are different milestones: a <code>v*</code> tag is only a release once CI's tag
           job has installed the public package at that tag and diffed it against the tagged
-          source. The v0.3.0 tag failed that check and was replaced by v0.3.1, whose
-          <a href="https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/38123386931">tag CI run passed</a>.
-          <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">CHANGELOG.md</a>
+          source. <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/CHANGELOG.md">CHANGELOG.md</a>
           records what each version verified;
           <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/main/EVIDENCE.md">EVIDENCE.md</a>
-          records observed checks and their limitations.
+          records observed checks and their limitations. The
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/38123386931">v0.3.1 tag job</a> is the first to pass the public-install contract;
+          <a href="https://github.com/shubhamsingh-cell/fleetcraft/actions/runs/34204184245"><code>v0.3.0</code></a> failed it and should not be pinned.
         </div>
       </div>
 
       <figure class="proof">
 <pre><code><span class="c">$ python3 scripts/validate.py</span>
 == skills/*/SKILL.md ==
+  <span class="c">… 11 skill lines</span>
 == agents/*.md ==
+  <span class="c">… 4 agent lines</span>
 == hooks/*.py ==
   ok    hooks/autoload-judgment.py (compiles, exits 0 on empty payload)
   ok    hooks/fleet-delegation-guard.py (compiles, exits 0 on empty payload)
   ok    hooks/retrieval-honesty-guard.py (compiles, exits 0 on empty payload)
-  <span class="c">… 5 more hook lines</span>
+  <span class="c">… 6 more hook lines</span>
 == repo-wide: no absolute local paths, no wikilinks ==
+  <span class="c">… 1 repo-wide line</span>
 validate.py: OK — 25 checks passed, 0 warning(s)
 
 <span class="c">$ python3 -m pytest tests/ -q</span>
-117 passed in 26.54s</code></pre>
+117 passed in 23.87s</code></pre>
         <figcaption>
           <span class="counts">11 skills · 4 agent roles · 8 runtime hooks · 1 generated, parity-checked plugin</span>
           Verbatim output, abridged where marked, at
           <a href="https://github.com/shubhamsingh-cell/fleetcraft/tree/v0.3.1">v0.3.1</a>
           (<a href="https://github.com/shubhamsingh-cell/fleetcraft/commit/8ade0c2">8ade0c2</a>),
-          2026-10-11, macOS, Python 3.9. Later commits on <code>main</code> may differ. The same
-          two commands are in the quickstart below; run them yourself. In the plugin, five of the eight hooks have a setting;
-          skill routing, agent telemetry and the retrieval-honesty check always run. Defaults:
-          judgment autoload and audit-mode delegation reminders on; completion gate and
-          evidence batching off; documentation routing reminds only.
+          2026-10-11, macOS, Python 3.9.6. Later commits on <code>main</code> may differ. Both
+          commands are in the source quickstart below; run them yourself. What the
+          hooks do in your shell is listed under Install.
         </figcaption>
       </figure>
     </div>
@@ -207,7 +221,51 @@ validate.py: OK — 25 checks passed, 0 warning(s)
 
   <section id="start">
     <div class="wrap">
-      <h2>Start with a local evaluation</h2>
+      <h2>Install</h2>
+      <p>
+        From the Claude Code plugin marketplace, pinned to a tag. <code>main</code> is a source
+        tree, not a release.
+      </p>
+<pre class="wrap-lines"><code>/plugin marketplace add shubhamsingh-cell/fleetcraft@v0.3.1
+/plugin install fleetcraft@fleetcraft</code></pre>
+      <p class="note">Then, in a new session, run <code>/fleetcraft:doctor</code> to confirm the installed package is intact.</p>
+      <h3>What runs in your shell</h3>
+      <p>
+        Eight hook scripts are registered. Only three can be turned off in plugin settings;
+        the other five act on every matching event, and one of those can stop a turn from finishing.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Hook and event</th><th>Setting</th><th>What it can do</th></tr></thead>
+          <tbody>
+            <tr><td><code>autoload-judgment</code><br><span class="note">SessionStart</span></td><td data-label="Setting">On by default; <code>autoload_judgment</code> turns it off</td><td data-label="Does">Adds a bundled judgment note to the session context.</td></tr>
+            <tr><td><code>skill-routing-guard</code><br><span class="note">UserPromptSubmit</span></td><td data-label="Setting">Always on</td><td data-label="Does">Adds a reminder when a prompt matches a known task shape. Never blocks.</td></tr>
+            <tr><td><code>fleet-delegation-guard</code><br><span class="note">PreToolUse: Bash, PowerShell</span></td><td data-label="Setting"><code>delegation_mode</code>: <code>audit</code> (default) or <code>strict</code></td><td data-label="Does">Audit adds a reminder. Strict asks you to confirm publish-shaped commands and commands it cannot parse; an unrecognized mode value also asks.</td></tr>
+            <tr><td><code>tool-routing-guard</code><br><span class="note">PreToolUse: WebFetch, WebSearch</span></td><td data-label="Setting">Reminder always on; <code>routing_enforce</code> is off by default</td><td data-label="Does">With <code>routing_enforce</code> on, it can deny a documentation fetch. Writes small marker files under <code>/tmp/claude-tool-routing-guard</code>.</td></tr>
+            <tr><td><code>retrieval-honesty-guard</code><br><span class="note">Stop</span></td><td data-label="Setting">Always on</td><td data-label="Does"><strong>Can block the end of a turn</strong> that claims it cannot verify something when no retrieval ran. Reads the session transcript file and writes a marker file in the temp directory.</td></tr>
+            <tr><td><code>agent-telemetry</code><br><span class="note">PostToolUse: Agent</span></td><td data-label="Setting">Always on</td><td data-label="Does">Shows the model telemetry the harness returned for a subagent, in your session.</td></tr>
+            <tr><td><code>completion-gate</code><br><span class="note">TaskCompleted</span></td><td data-label="Setting">Off by default; <code>completion_gate</code></td><td data-label="Does">When on, requires <code>Evidence:</code> and <code>Validation:</code> fields before a verified task closes.</td></tr>
+            <tr><td><code>evidence-batch</code><br><span class="note">PostToolBatch</span></td><td data-label="Setting">Off by default; <code>evidence_batch</code></td><td data-label="Does">When on, summarizes each completed tool batch.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>If a hook misbehaves:</strong> the always-on hooks have no setting of their own.
+        Stop all of them with <code>claude plugin disable fleetcraft@fleetcraft</code>, or remove the
+        plugin with <code>claude plugin uninstall fleetcraft@fleetcraft</code>.
+        Every hook runs <code>python3 -B</code>, so <code>python3</code> (3.9 or newer) must be on your
+        <code>PATH</code>; they import only the Python standard library.
+        None of them imports a networking or process-spawning module or calls <code>eval</code> or <code>exec</code>;
+        their output goes into your session, or to the marker files noted above. That was checked by
+        reading the imports at the tagged commit, not by running a sandbox.
+      </p>
+      <p class="note">
+        Source: <code>hooks/hooks.json</code> and the <code>userConfig</code> block of
+        <code>plugin.json</code> at the tagged commit. Read
+        <a href="https://github.com/shubhamsingh-cell/fleetcraft/blob/v0.3.1/SECURITY.md">SECURITY.md</a>
+        before enabling anything.
+      </p>
+      <h3>Or evaluate from source</h3>
       <p>
         Python 3.9+ and the Claude Code CLI are needed for the package checks. The core skills
         can also be read as plain Markdown. Inspect
@@ -216,12 +274,13 @@ validate.py: OK — 25 checks passed, 0 warning(s)
       </p>
 <pre><code>git clone https://github.com/shubhamsingh-cell/fleetcraft.git
 cd fleetcraft
+python3 scripts/validate.py
+python3 -m pytest tests/ -q
 python3 scripts/build_plugin.py
 python3 scripts/check_plugin_parity.py
-python3 -m unittest discover -v
-claude --plugin-dir plugins/fleetcraft   <span class="c"># then run /fleetcraft:doctor</span></code></pre>
+claude --plugin-dir plugins/fleetcraft</code></pre>
       <p class="note">
-        A local <code>--plugin-dir</code> session is the candidate evaluation path. The legacy
+        Run <code>/fleetcraft:doctor</code> in that session. <code>python3 -m unittest discover</code> works in place of pytest. A local <code>--plugin-dir</code> session evaluates the source tree as it is now, which is not the same as the tagged package the marketplace serves. The legacy
         installer is still available for source-layout users
         (<code>bash scripts/install.sh --dry-run</code>); it preserves existing configuration and
         reports its destinations. Avoid loading the manual and plugin copies together.
