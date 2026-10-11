@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and start a fresh empty `## [Unreleased]` above it.
 -->
 
-## [0.3.1] - 2026-09-08
+## [0.3.1] - 2026-10-11
 
 Release repair. `v0.3.0` shipped a package that installs but whose own doctor
 rejects it: Claude Code 2.1.263 creates an empty `.in_use/` loader directory in
